@@ -1,0 +1,197 @@
+/* Semantic tokens: stylesheets reference these, never raw colors. */
+:root {
+  --bg: #111113;
+  --surface: #19191c;
+  --surface-raised: #222226;
+  --fg: #ececef;
+  --fg-muted: #a1a1aa;
+  --fg-subtle: #8b8b94;
+  --border: #2a2a2f;
+  --accent: #ececef;
+  --accent-fg: #111113;
+  --danger: #e5484d;
+  --focus: var(--fg);
+
+  /* Flat: radii stay 0; exceptions set their own radius. */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-pill: 0;
+
+  --font-title: var(--font-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --title-weight: 600;
+  --title-tracking: -0.01em;
+  --title-transform: none;
+  /* Second hue: structure worth noticing, never anything clickable. */
+  --accent-2: var(--fg-subtle);
+  /* Accent for small touches (caret, selection, quiet hovers). */
+  --accent-touch: var(--accent);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --surface-raised: #f4f4f5;
+    --fg: #18181b;
+    --fg-muted: #52525b;
+    --fg-subtle: #71717a;
+    --border: #e4e4e7;
+    --accent: #18181b;
+    --accent-fg: #fafafa;
+    --danger: #dc2626;
+
+    color-scheme: light;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Global: <ViewTransition> class names can't be module-scoped. Exits are quicker than enters. */
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(.deck-next),
+::view-transition-old(.deck-prev) {
+  animation:
+    140ms ease-in both vt-fade reverse,
+    260ms ease-in-out both vt-slide reverse;
+}
+::view-transition-new(.deck-next),
+::view-transition-new(.deck-prev) {
+  animation:
+    200ms ease-out 60ms both vt-fade,
+    260ms ease-in-out both vt-slide;
+}
+::view-transition-old(.deck-next) {
+  --vt-offset: -24px 0;
+}
+::view-transition-new(.deck-next) {
+  --vt-offset: 24px 0;
+}
+::view-transition-old(.deck-prev) {
+  --vt-offset: 24px 0;
+}
+::view-transition-new(.deck-prev) {
+  --vt-offset: -24px 0;
+}
+
+/* The new current's highlight follows a beat later so two never show at once. */
+::view-transition-group(.strip-move),
+::view-transition-group(.strip-move-current) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+::view-transition-old(.strip-move) {
+  animation: 90ms ease-out both vt-fade reverse;
+}
+::view-transition-new(.strip-move) {
+  animation: none;
+}
+::view-transition-old(.strip-move-current) {
+  animation: 100ms ease-out 40ms both vt-fade reverse;
+}
+::view-transition-new(.strip-move-current) {
+  animation: 110ms ease-out 40ms both vt-fade;
+}
+::view-transition-new(.strip-in) {
+  animation: 200ms ease-out 80ms both vt-fade;
+}
+::view-transition-old(.strip-out) {
+  animation: 140ms ease-in both vt-fade reverse;
+}
+
+::view-transition-old(.page-fade) {
+  animation: 90ms ease-in both vt-fade reverse;
+}
+::view-transition-new(.page-fade) {
+  animation: 140ms ease-out both vt-fade;
+}
+
+/* object-fit: none so text never squashes while a chapter resizes. */
+::view-transition-new(.row-in) {
+  --vt-offset: 0 -4px;
+  animation:
+    210ms ease-out both vt-fade,
+    210ms ease-out both vt-slide;
+}
+::view-transition-new(.row-fade) {
+  animation: 160ms ease-out both vt-fade;
+}
+::view-transition-old(.row-out) {
+  animation: 150ms ease-in both vt-fade reverse;
+}
+::view-transition-group(.row-move) {
+  overflow: clip;
+  animation-duration: 260ms;
+  animation-timing-function: ease-in-out;
+}
+::view-transition-old(.row-move) {
+  display: none;
+}
+::view-transition-new(.row-move) {
+  animation: none;
+  height: 100%;
+  object-fit: none;
+  object-position: left top;
+}
+
+::view-transition-old(.image-out) {
+  animation: 150ms ease-in both vt-fade reverse;
+}
+::view-transition-new(.image-in) {
+  animation: 260ms ease-out both vt-fade;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-slide {
+  from {
+    translate: var(--vt-offset);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+

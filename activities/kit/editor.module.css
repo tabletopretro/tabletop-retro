@@ -1,0 +1,186 @@
+.setup {
+  display: grid;
+  gap: 16px;
+}
+
+.setting {
+  display: grid;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+/* Segments overlap by 1px so neighbours share a border. */
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.segment {
+  height: 36px;
+  margin-left: -1px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 14px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.segment:first-child {
+  margin-left: 0;
+}
+
+.segment:hover {
+  color: var(--fg);
+}
+
+/* The chosen one sits on top so its firmer border shows on both sides. */
+.segment[aria-checked="true"] {
+  position: relative;
+  border-color: var(--fg);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.prompt {
+  display: block;
+  width: 100%;
+  min-height: 3lh;
+  field-sizing: content;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  background: transparent;
+  resize: none;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 26px;
+  line-height: 1.35;
+  letter-spacing: var(--title-tracking);
+  transition: border-color 150ms ease;
+}
+
+.prompt::placeholder,
+.optionInput::placeholder {
+  color: var(--fg-subtle);
+  opacity: 0.6;
+}
+
+:is(.prompt, .optionInput):hover {
+  border-color: var(--fg-subtle);
+}
+
+:is(.prompt, .optionInput):focus {
+  outline: none;
+  border-color: var(--fg);
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+}
+
+.option {
+  position: relative;
+}
+
+.optionInput {
+  display: block;
+  width: 100%;
+  height: 48px;
+  padding: 0 44px 0 16px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 16px;
+  transition: border-color 150ms ease;
+}
+
+.optionRemove {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--fg-subtle);
+  cursor: pointer;
+}
+
+.optionRemove:hover {
+  color: var(--fg);
+}
+
+.add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  font-size: 14px;
+  color: var(--fg-subtle);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.add:hover:not(:disabled) {
+  color: var(--fg);
+  border-color: var(--fg-subtle);
+}
+
+.add:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 2px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.check input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.rules {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.preview {
+  border: 1px solid var(--border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment,
+  .prompt,
+  .optionInput,
+  .add {
+    transition: none;
+  }
+}
+

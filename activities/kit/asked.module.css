@@ -1,0 +1,368 @@
+/* The question and timer stay put; content under them scrolls so the slide never does. */
+.asked {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.head {
+  display: grid;
+  gap: 10px;
+  flex: none;
+}
+
+.prompt {
+  margin: 0;
+  max-width: 28ch;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 40px;
+  line-height: 1.2;
+  letter-spacing: var(--title-tracking);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.countdown[data-low] {
+  color: var(--accent-2);
+}
+
+.countdown[data-done] {
+  color: var(--fg-subtle);
+}
+
+.compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 640px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  max-height: 140px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--fg);
+  resize: none;
+  field-sizing: content;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.input::placeholder {
+  color: var(--fg-subtle);
+}
+
+.primary {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  gap: 6px;
+  height: 46px;
+  padding: 0 20px;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--danger);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+  min-height: 84px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+
+.card[data-mine] {
+  border-color: color-mix(in srgb, var(--accent-2) 70%, var(--border));
+}
+
+.cardText {
+  font-size: 17px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.cardBy {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-subtle);
+}
+
+.cardTools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.cardInput {
+  width: 100%;
+  min-height: 3lh;
+  padding: 6px 8px;
+  border: 0;
+  /* Edit field: 4px radius. */
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--fg);
+  resize: none;
+  field-sizing: content;
+}
+
+.cardInput:focus {
+  outline: 1.5px solid var(--accent);
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg-subtle);
+  cursor: pointer;
+}
+
+.iconButton:hover:not(:disabled),
+.iconButton:focus-visible {
+  color: var(--fg);
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.options {
+  display: grid;
+  gap: 8px;
+  max-width: 640px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  font-size: 20px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  font-size: 19px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.pick:hover:not(:disabled) {
+  border-color: var(--fg-subtle);
+}
+
+.pick[aria-checked="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  font-weight: 600;
+}
+
+.pick:disabled {
+  cursor: default;
+}
+
+.pick:disabled:not([aria-checked="true"]) {
+  color: var(--fg-subtle);
+}
+
+.pickMark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--fg-subtle);
+}
+
+.pick[aria-checked="true"] .pickMark {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.submitted {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent-2);
+}
+
+.tally {
+  display: grid;
+  gap: 14px;
+  max-width: 640px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tallyRow {
+  display: grid;
+  gap: 6px;
+}
+
+.tallyHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 18px;
+}
+
+.tallyRow[data-mine] .tallyOption {
+  font-weight: 600;
+}
+
+.tallyOption {
+  overflow-wrap: anywhere;
+}
+
+.tallyCount {
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  display: block;
+  height: 8px;
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  background: var(--accent-2);
+  transition: width 300ms ease;
+}
+
+.voters {
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+.cards[data-compact] {
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.cards[data-compact] .card {
+  min-height: 0;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.cards[data-compact] .cardText {
+  font-size: 14px;
+}
+
+.cards[data-compact] .cardBy {
+  font-size: 12px;
+}
+
+.tally[data-compact] {
+  gap: 10px;
+}
+
+.tally[data-compact] .tallyHead {
+  font-size: 14px;
+}
+
+.tally[data-compact] .bar {
+  height: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pick,
+  .bar > span {
+    transition: none;
+  }
+}

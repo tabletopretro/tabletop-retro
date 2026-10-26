@@ -1,0 +1,53 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.mast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+}
+
+.wordmark {
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 20px;
+  letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform);
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-bottom: 12vh;
+}
+
+.title {
+  margin: 0;
+  max-width: 18ch;
+  text-align: center;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform);
+}
+
+.wordmark {
+  transition: color 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark {
+    transition: none;
+  }
+}

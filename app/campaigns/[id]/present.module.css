@@ -1,0 +1,702 @@
+.present {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: 0;
+}
+
+.main {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 16px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 40px 40px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.placeholder {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--fg-subtle);
+}
+
+.number {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-2);
+}
+
+/* The nav bar shares this width so its buttons sit under the slide's edges. */
+.stage,
+.navBar {
+  width: min(100%, calc((100vh - 330px) * 16 / 9));
+}
+
+.slide {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+/* Buttons pinned to the slide's edges so a long page name never moves them. */
+.navBar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.navButton {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.navButton:hover:not(:disabled) {
+  border-color: var(--fg-subtle);
+  color: var(--fg);
+}
+
+.navButton:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.position {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.positionChapter {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--fg-subtle);
+}
+
+.closeChapter {
+  flex: none;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--accent-touch);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-touch);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.closeChapter:hover {
+  background: color-mix(in srgb, var(--accent-touch) 12%, transparent);
+}
+
+.reopenChapter {
+  flex: none;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  font-size: 13px;
+  color: var(--fg-subtle);
+  cursor: pointer;
+}
+
+.reopenChapter:hover {
+  border-color: var(--fg-subtle);
+  color: var(--fg-muted);
+}
+
+.reopenChapter[data-nudge="0"] {
+  animation: nudge-back-a 320ms ease-out;
+}
+
+.reopenChapter[data-nudge="1"] {
+  animation: nudge-back-b 320ms ease-out;
+}
+
+@keyframes nudge-back-a {
+  30% {
+    translate: -4px 0;
+  }
+}
+
+@keyframes nudge-back-b {
+  30% {
+    translate: -4px 0;
+  }
+}
+
+/* Two identical animations, alternated, so every press replays it. */
+.closeChapter[data-nudge="0"] {
+  animation: nudge-a 320ms ease-out;
+}
+
+.closeChapter[data-nudge="1"] {
+  animation: nudge-b 320ms ease-out;
+}
+
+@keyframes nudge-a {
+  30% {
+    translate: 4px 0;
+    background: color-mix(in srgb, var(--accent-touch) 18%, transparent);
+  }
+}
+
+@keyframes nudge-b {
+  30% {
+    translate: 4px 0;
+    background: color-mix(in srgb, var(--accent-touch) 18%, transparent);
+  }
+}
+
+/* Always takes its line, so the filmstrip below never jumps. */
+.navNote {
+  min-height: 1.5em;
+  margin: -6px 0 0;
+  font-size: 13px;
+  color: var(--fg-subtle);
+  text-align: center;
+}
+
+.navNote strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.strip {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stripSlot {
+  width: 176px;
+}
+
+/* Drawn in the gap so nothing shifts. */
+.stripSlot {
+  position: relative;
+}
+
+.stripSlot[data-chapter-start]::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  bottom: 18px;
+  left: -9px;
+  width: 2px;
+  background: var(--accent-2);
+}
+
+.thumbButton {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Rendered at 960 x 540 and scaled down so thumbnails match exactly. */
+.thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.thumbCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 960px;
+  height: 540px;
+  transform: scale(calc(174 / 960));
+  transform-origin: top left;
+  pointer-events: none;
+}
+
+.thumbButton:hover .thumb {
+  border-color: var(--fg-subtle);
+}
+
+/* After arrow-key navigation, until the pointer moves again. */
+.strip[data-keynav] .thumbButton:hover .thumb {
+  border-color: var(--border);
+}
+
+.strip[data-keynav] .thumbButton[aria-current]:hover .thumb {
+  border-color: var(--accent-touch);
+}
+
+.thumbButton[aria-current] .thumb {
+  border: 2px solid var(--accent-touch);
+}
+
+.thumbLabel {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+.thumbButton[aria-current] .thumbLabel {
+  color: var(--fg);
+}
+
+.thumbButton[data-past] .thumbCanvas {
+  filter: grayscale(1) brightness(0.45);
+}
+
+.thumbButton[data-past] .thumbLabel {
+  opacity: 0.55;
+}
+
+.thumbName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Images and video shrink to fit so nothing ever scrolls. */
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+  overflow: hidden;
+  padding: 48px 64px;
+}
+
+.screen > :is(.heading, .text) {
+  flex: none;
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 40px;
+  line-height: 1.2;
+  letter-spacing: var(--title-tracking);
+}
+
+.revealWord {
+  white-space: nowrap;
+}
+
+.revealLetter {
+  opacity: 0;
+  animation-name: reveal-letter;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes reveal-letter {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revealLetter {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+.image {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.videoFrame {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.videoPlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 22px 0 18px;
+  border: 0;
+  /* Soft button: 6px radius. */
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.text {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.blank {
+  margin: auto 0;
+  text-align: center;
+  font-size: 15px;
+  color: var(--fg-subtle);
+}
+
+.speechScreen {
+  justify-content: center;
+}
+
+.speech {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+}
+
+.speaker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.speakerName {
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 24px;
+  letter-spacing: var(--title-tracking);
+}
+
+.line {
+  max-width: 36ch;
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Exactly the slide's height so a game's pieces size to fit rather than scroll. */
+.activityScreen {
+  height: 100%;
+  justify-content: center;
+  gap: 16px;
+  padding-block: 24px;
+}
+
+.activityScreen[data-bleed] {
+  padding: 0;
+}
+
+.openerScreen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.openerImage {
+  display: block;
+  max-width: 100%;
+  max-height: 45%;
+  object-fit: contain;
+}
+
+.openerTitle {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 56px;
+  line-height: 1.15;
+  letter-spacing: var(--title-tracking);
+}
+
+.openerSubtitle {
+  margin: 0;
+  font-size: 22px;
+  color: var(--fg-muted);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 0;
+  min-height: 0;
+  transition: flex-grow 180ms ease;
+}
+
+.panel:not([data-open]) {
+  flex-basis: auto;
+}
+
+.panel + .panel {
+  border-top: 1px solid var(--border);
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 24px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.panelHead:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.panelCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-subtle);
+}
+
+.panelChevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--fg-subtle);
+  transform: rotate(90deg);
+  transition: transform 180ms ease;
+}
+
+.panelHead[aria-expanded="false"] .panelChevron {
+  transform: rotate(0deg);
+}
+
+.panelBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 24px 20px;
+}
+
+.panelChat {
+  display: grid;
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px 16px;
+}
+
+.panelBody[hidden],
+.panelChat[hidden] {
+  display: none;
+}
+
+.notesText {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.seats {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 18px;
+}
+
+.seatsLabel {
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+.seatList {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.seatItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.seatCard {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid var(--border);
+}
+
+.seatCard > :first-child {
+  color: var(--fg);
+}
+
+.responses {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 18px;
+}
+
+.responsesHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.responsesTools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconTool {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.iconTool:hover {
+  color: var(--fg);
+}
+
+/* Soft button: 6px radius. */
+.showButton {
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.showButton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fg) 16%, transparent);
+}
+
+.showButton[aria-pressed="true"] {
+  background: var(--accent-2);
+  color: var(--bg);
+}
+
+.showButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tableEmpty {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+.nothing {
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.nothingTitle {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navButton,
+  .closeChapter {
+    transition: none;
+  }
+
+  .closeChapter[data-nudge],
+  .reopenChapter[data-nudge] {
+    animation: none;
+  }
+}
+
+/* In the page so browsers fetch it, but unseen. */
+.preload {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

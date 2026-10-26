@@ -1,0 +1,159 @@
+/* All controls share one height so mixed rows sit level. */
+.primary,
+.secondary,
+.quiet,
+.field {
+  --control-h: 48px;
+}
+
+.primary,
+.secondary,
+.quiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--control-h);
+  padding: 0 22px;
+  border-radius: var(--radius-pill);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, var(--bg));
+}
+
+.secondary {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--fg-subtle);
+}
+
+.quiet {
+  --control-h: 36px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--fg-subtle);
+  font-weight: 400;
+}
+
+.quiet:hover {
+  color: var(--fg);
+}
+
+.primary:disabled,
+.secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.form {
+  position: relative;
+  width: 280px;
+}
+
+.field {
+  display: flex;
+  height: var(--control-h);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  transition: border-color 180ms ease;
+}
+
+.field:focus-within {
+  border-color: var(--accent);
+}
+
+.field[data-invalid] {
+  border-color: var(--danger);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 0 22px;
+  border: 0;
+  background: transparent;
+  font-size: 16px;
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--fg-subtle);
+  opacity: 0.55;
+}
+
+.code {
+  font-family: var(--font-mono);
+  font-size: 17px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-feature-settings: "lnum" 1;
+}
+
+.go {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(var(--control-h) - 10px);
+  margin: 4px;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-fg);
+  cursor: pointer;
+  transition:
+    opacity 180ms ease,
+    background-color 180ms ease;
+}
+
+.go:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 85%, var(--bg));
+}
+
+.go:disabled {
+  cursor: default;
+  opacity: 0.25;
+}
+
+/* Out of flow so an error never shifts the layout around it. */
+.error {
+  position: absolute;
+  inset: calc(100% + 10px) 0 auto;
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary,
+  .quiet,
+  .field,
+  .go {
+    transition: none;
+  }
+}
+

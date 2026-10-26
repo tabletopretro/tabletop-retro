@@ -1,0 +1,139 @@
+.dice {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconAction {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.iconAction:hover {
+  color: var(--fg);
+}
+
+.label {
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+.action {
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.action:hover:not(:disabled) {
+  color: var(--fg);
+}
+
+.rows {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.row > :first-child {
+  color: var(--fg);
+}
+
+.row:hover {
+  border-color: var(--fg-subtle);
+  color: var(--fg);
+}
+
+.row[aria-pressed="true"] {
+  border-color: var(--fg);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mark {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.roll {
+  min-width: 2ch;
+  text-align: right;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row {
+    transition: none;
+  }
+}

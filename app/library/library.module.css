@@ -1,0 +1,277 @@
+.library {
+  width: min(1080px, 100% - 64px);
+  margin: 0 auto;
+  padding: 6vh 0 12vh;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+  margin: 0 0 28px;
+}
+
+.tab {
+  padding: 0 0 12px;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: var(--title-tracking);
+  color: var(--fg-subtle);
+  text-decoration: none;
+  transition:
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.tab:hover {
+  color: var(--fg);
+}
+
+.tab[aria-current="page"] {
+  border-bottom-color: var(--fg);
+  color: var(--fg);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 10px 10px 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.card:hover {
+  border-color: var(--fg-subtle);
+  transform: translateY(-2px);
+}
+
+.cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  color: var(--fg-subtle);
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 56px;
+  letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform);
+  transition: color 180ms ease;
+}
+
+.card:hover .cover {
+  color: var(--fg);
+}
+
+.title {
+  padding: 0 4px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--fg-subtle);
+  font-feature-settings: "lnum" 1;
+}
+
+.newCard {
+  border-style: dashed;
+}
+
+.newCover {
+  border-style: dashed;
+}
+
+.portraitCover {
+  border-color: transparent;
+}
+
+.cardSlot {
+  position: relative;
+}
+
+.cardAction {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+}
+
+.cardDelete {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg-subtle);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
+}
+
+.cardSlot:is(:hover, :focus-within) .cardDelete {
+  opacity: 1;
+}
+
+/* No hover on touch screens, so the button just stays visible. */
+@media (hover: none) {
+  .cardDelete {
+    opacity: 1;
+  }
+}
+
+.cardDelete:hover,
+.cardDelete:focus-visible {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.artworkCover {
+  width: 100%;
+  object-fit: cover;
+}
+
+.title[data-empty] {
+  color: var(--fg-subtle);
+}
+
+.fixedCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 10px 10px 14px;
+  border: 1px solid var(--border);
+}
+
+.fixedCover {
+  position: relative;
+}
+
+.defaultTag {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.added {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding: 8px 4px 0;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.detail {
+  display: grid;
+  gap: 20px;
+}
+
+.detailBar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(720px, 100%);
+  margin: 0 auto;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--fg-subtle);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--fg);
+}
+
+.status,
+.statusError {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+.statusError {
+  color: var(--danger);
+}
+
+.retry {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.newCard .title {
+  color: var(--fg-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cover,
+  .tab,
+  .cardDelete {
+    transition: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}
+
