@@ -142,12 +142,17 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
+# What runs in production: no eslint, typescript or types. drizzle-kit is a
+# runtime dependency because `db:push` runs from this image.
+RUN npm ci --omit=dev
 
 FROM node:24-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production DATABASE_PATH=/data/tabletop.db CONTENT_DIR=/data/content
-# Dev dependencies stay in so `npm run db:push` works from this image.
-COPY --from=build /app ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/package.json /app/next.config.ts /app/drizzle.config.ts ./
+COPY --from=build /app/db ./db
 EXPOSE 1313
 CMD ["npm", "start"]
 ```
