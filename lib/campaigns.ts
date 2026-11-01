@@ -1,6 +1,8 @@
 import "server-only";
 import {
   closeSync,
+  constants,
+  copyFileSync,
   mkdirSync,
   openSync,
   readdirSync,
@@ -366,4 +368,50 @@ function pruneSounds(contentPath: string, doc: CampaignDoc, keep: string[]) {
     const full = path.join(dir, file);
     if (statSync(full).mtimeMs < cutoff) unlinkSync(full);
   }
+}
+
+export type CopyMediaResult = { missed: number; full: boolean };
+
+/**
+ * Copies the media pasted pages use from one of the owner's campaigns into
+ * another, keeping the file names (random, so they can't clash). Only names
+ * we could have generated are touched; missing files and ones already there
+ * are skipped. A copy is a second file on disk, so it draws on the owner's
+ * storage budget: once `budget` bytes are spent the rest are left behind
+ * and `full` is set. `missed` counts files that should exist but don't.
+ */
+export function copyCampaignMedia(from: OwnedCampaign, to: OwnedCampaign, names: readonly string[], budget: number): CopyMediaResult {
+  let missed = 0;
+  let full = false;
+  let left = budget;
+  for (const name of names) {
+    const dirs = IMAGE_NAME_PATTERN.test(name)
+      ? [imagesDirFor(from.contentPath), imagesDirFor(to.contentPath)]
+      : VIDEO_NAME_PATTERN.test(name)
+        ? [videosDirFor(from.contentPath), videosDirFor(to.contentPath)]
+        : SOUND_NAME_PATTERN.test(name)
+          ? [soundsDirFor(from.contentPath), soundsDirFor(to.contentPath)]
+          : null;
+    if (!dirs) continue;
+    const source = path.join(dirs[0], name);
+    let size: number;
+    try {
+      size = statSync(source).size;
+    } catch {
+      missed += 1;
+      continue;
+    }
+    if (size > left) {
+      full = true;
+      continue;
+    }
+    mkdirSync(dirs[1], { recursive: true });
+    try {
+      copyFileSync(source, path.join(dirs[1], name), constants.COPYFILE_EXCL);
+      left -= size;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") missed += 1;
+    }
+  }
+  return { missed, full };
 }

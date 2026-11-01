@@ -4,7 +4,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, schema } from "@/db";
-import { NOT_OPEN } from "@/lib/not-open";
+import { IN_SESSION, NOT_OPEN } from "@/lib/not-open";
 import { allow, clientKey } from "@/lib/rate-limit";
 import { TABLE_CODE_EXAMPLE, normalizeTableCode } from "@/lib/table-code";
 
@@ -22,12 +22,14 @@ export async function joinTable(
   }
 
   const table = db
-    .select({ id: schema.tables.id })
+    .select({ state: schema.tables.state, lateSeats: schema.tables.lateSeats })
     .from(schema.tables)
     .where(and(eq(schema.tables.code, code), ne(schema.tables.state, "closed")))
     .get();
 
   if (!table) return { error: NOT_OPEN };
+  // Someone already seated gets back in through /play/[code] regardless; this only stops new seats.
+  if (table.state === "in_session" && !table.lateSeats) return { error: IN_SESSION };
 
   redirect(`/play/${code}`);
 }

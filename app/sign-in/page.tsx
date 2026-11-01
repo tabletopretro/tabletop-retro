@@ -34,26 +34,35 @@ export default async function SignInPage() {
         ) : null}
 
         {LOCAL_SIGN_IN_ENABLED ? (
-          <section className={styles.local} aria-labelledby="local-heading">
-            <p id="local-heading" className={styles.eyebrow}>
-              Local
-            </p>
+          <>
             {localUsers.length > 0 ? (
-              <ul className={styles.users}>
-                {localUsers.map((u) => (
-                  <li key={u.id}>
-                    <form action={signInAsLocalUser}>
-                      <input type="hidden" name="userId" value={u.id} />
-                      <button type="submit" className={ui.secondary}>
-                        {u.name}
-                      </button>
-                    </form>
-                  </li>
-                ))}
-              </ul>
+              <section className={styles.local} aria-labelledby="local-heading">
+                <p id="local-heading" className={styles.eyebrow}>
+                  Sign in as
+                </p>
+                <ul className={styles.users}>
+                  {localUsers.map((u) => (
+                    <li key={u.id}>
+                      <form action={signInAsLocalUser}>
+                        <input type="hidden" name="userId" value={u.id} />
+                        <button type="submit" className={ui.secondary}>
+                          {u.name}
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             ) : null}
-            <NewLocalUserForm />
-          </section>
+            {/* Creating a user is a sign-in: no password, so it exists only under next dev (lib/auth/config.ts). */}
+            <section className={styles.newUser} aria-labelledby="new-user-heading">
+              <p id="new-user-heading" className={styles.eyebrow}>
+                New user
+              </p>
+              <NewLocalUserForm />
+              <p className={styles.hint}>Local only, no password. Anyone on this machine can sign in as any user.</p>
+            </section>
+          </>
         ) : null}
       </main>
     </div>

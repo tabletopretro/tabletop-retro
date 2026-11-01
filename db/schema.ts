@@ -58,6 +58,34 @@ export const sessions = sqliteTable(
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
 
+export const teams = sqliteTable("teams", {
+  id: id(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  createdAt: createdAt(),
+});
+
+/** Decides whose home page a live table shows up on. */
+export const memberships = sqliteTable(
+  "memberships",
+  {
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["member", "admin"] })
+      .notNull()
+      .default("member"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.teamId, t.userId] }),
+    index("memberships_user_idx").on(t.userId),
+  ],
+);
+
 /** Chapters and pages live in JSON under content/campaigns/<contentPath>/. */
 export const campaigns = sqliteTable(
   "campaigns",
@@ -68,6 +96,8 @@ export const campaigns = sqliteTable(
       .references(() => users.id),
     title: text("title").notNull(),
     contentPath: text("content_path").notNull().unique(),
+    /** Null for a campaign outside any team; its tables then show on no team's home. */
+    teamId: text("team_id").references(() => teams.id),
     /** Permanent code; null until first claimed. */
     tableCode: text("table_code").unique(),
     createdAt: createdAt(),
@@ -93,6 +123,9 @@ export const characters = sqliteTable(
     /** The TL's own label/value pairs, as JSON: [{ label, value }]. */
     fields: text("fields", { mode: "json" }).$type<unknown>(),
     /** A built-in icon id from lib/character-doc.ts, shown when there's no image. */
+    icon: text("icon"),
+    /** Played by the TL, not a player. Lists put NPCs after the player characters. */
+    npc: integer("npc", { mode: "boolean" }).notNull().default(false),
     createdAt: createdAt(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" })
       .notNull()
@@ -118,7 +151,8 @@ export const campaignCharacters = sqliteTable(
   ],
 );
 
-export const TABLE_STATES = ["open", "closed"] as const;
+/** In session: the story has started; new seats need `late_seats` on. Still live to everyone seated. */
+export const TABLE_STATES = ["open", "in_session", "closed"] as const;
 export type TableState = (typeof TABLE_STATES)[number];
 
 /** `snapshot`: the players' copy of the campaign, TL-only notes left out. */
@@ -133,7 +167,10 @@ export const tables = sqliteTable(
     tlUserId: text("tl_user_id")
       .notNull()
       .references(() => users.id),
+    /** Copied from the campaign at open; null for a table no team's home lists. */
+    teamId: text("team_id").references(() => teams.id),
     state: text("state", { enum: TABLE_STATES }).notNull().default("open"),
+    lateSeats: integer("late_seats", { mode: "boolean" }).notNull().default(false),
     snapshot: text("snapshot", { mode: "json" }).notNull(),
     /** The slide the TL is on (a page id or `opener:<chapterId>`); players follow it. */
     currentSlide: text("current_slide"),
@@ -142,6 +179,7 @@ export const tables = sqliteTable(
     /** Live state everyone at the table sees: { shown, timers, activities } (LiveState in lib/tables.ts). */
     liveState: text("live_state", { mode: "json" }).$type<unknown>(),
     openedAt: createdAt(),
+    startedAt: integer("started_at", { mode: "timestamp_ms" }),
     closedAt: integer("closed_at", { mode: "timestamp_ms" }),
   },
   (t) => [
@@ -149,6 +187,7 @@ export const tables = sqliteTable(
     uniqueIndex("tables_live_code_idx")
       .on(t.code)
       .where(sql`${t.state} != 'closed'`),
+    index("tables_team_state_idx").on(t.teamId, t.state),
   ],
 );
 
@@ -217,6 +256,7 @@ export const tableMessages = sqliteTable(
 );
 
 export type Session = typeof sessions.$inferSelect;
+export type Team = typeof teams.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
 export type Table = typeof tables.$inferSelect;
 export type Seat = typeof seats.$inferSelect;

@@ -1,165 +1,249 @@
-/* The 2px frame (--bw) is for controls only; page breaks are 1px. */
+/* The signed-out page: the lockup, one line that rolls, one button. Desktop only, like the rest. */
 .home {
-  --muted: var(--fg-muted);
-  --line-strong: var(--fg-subtle);
-  --accent-ink: var(--accent-fg);
-  --col: 1080px;
-  --edge: 32px;
-  --bw: 2px;
-
   min-height: 100vh;
   background: var(--bg);
   color: var(--fg);
-  font: 16px/1.5 var(--font-body);
+  font: 400 17px/1.5 var(--font-body);
 }
 
 .home a {
   color: inherit;
 }
 
-.home :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .col {
-  width: min(var(--col), 100% - 2 * var(--edge));
+  width: min(1180px, 100% - 2 * clamp(20px, 4vw, 56px));
   margin-inline: auto;
 }
 
-.mast {
-  border-bottom: 1px solid var(--border);
-}
-
-.mast .col {
+.top {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: space-between;
+  padding: 18px clamp(20px, 4vw, 56px);
 }
 
-.wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 0;
-  text-decoration: none;
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.wordmark svg {
-  display: block;
-}
-
-.nav {
-  display: flex;
-}
-
-.nav > * {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 16px;
-  border-left: 1px solid var(--border);
-  font-family: var(--font-body);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-decoration: none;
-  transition:
-    background 0.1s,
-    color 0.1s;
-}
-
-.nav > a:hover {
-  background: var(--fg);
-  color: var(--bg);
-}
-
-.label {
-  font-family: var(--font-body);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent-2);
-  margin: 0 0 14px;
-}
-
-.label b {
-  display: inline-block;
-  padding: 1px 6px;
-  margin-right: 8px;
-  background: var(--accent-2);
-  color: var(--bg);
-  font-weight: 700;
-}
-
-.title {
-  margin: 0;
-  font-family: var(--font-title);
-  font-weight: var(--title-weight);
-  font-size: 52px;
-  line-height: 1;
-  letter-spacing: var(--title-tracking);
-}
-
-.band {
-  border-bottom: 1px solid var(--border);
-}
-
-.band .col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  padding: 56px 0;
-  align-items: center;
-}
-
-.band.tl .col {
-  padding: 40px 0;
-}
-
-.btn {
+.navMark {
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 22px;
-  border: var(--bw) solid var(--fg);
-  background: none;
+  min-height: 44px;
+  min-width: 44px;
   text-decoration: none;
-  font-family: var(--font-body);
+}
+
+/* Hovering the mark rolls "go to tabletopretro.com" up into view, the way the tagline rolls. */
+.navRoll {
+  --nav-line: 1.2em;
+  display: block;
+  height: var(--nav-line);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: var(--nav-line);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.navRollIn {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.28s cubic-bezier(0.7, 0, 0.2, 1);
+}
+
+.navRollIn span {
+  display: block;
+  height: var(--nav-line);
+  white-space: nowrap;
+}
+
+.navMark:hover .navRollIn,
+.navMark:focus-visible .navRollIn {
+  transform: translateY(calc(var(--nav-line) * -1));
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.navIcon {
+  width: 56px;
+  height: 47px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  text-decoration: none;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  transition: color 0.18s;
+}
+
+.gh:hover {
+  color: var(--accent-2);
+}
+
+.lock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0 clamp(32px, 6vh, 56px);
+}
+
+/* The one button: periwinkle, amber on hover. `.home .act` outranks `.home a`, which would otherwise inherit the page color. */
+.home .act {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 0 26px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  text-decoration: none;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  transition: background 0.22s ease;
+}
+
+.home .act:hover,
+.home .act:focus-visible {
+  background: var(--accent-2);
+  color: var(--accent-fg);
+}
+
+/* Matches the code field opposite it: same height, same width, same size of type. Scoped like .home .act so it wins. */
+.home .buildAct {
+  width: 100%;
+  height: 88px;
+  justify-content: center;
+  padding: 0 24px;
+  /* Same size as Join in the code field opposite (join-form.module.css). */
+  font-size: 40px;
+}
+
+.mark {
+  width: clamp(180px, 24vw, 300px);
+  height: auto;
+  display: block;
+}
+
+.wordmark {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: clamp(28px, 4.5vw, 52px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+/* Play, then Build: each row is the words on the left and the one thing to do on the right. */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 6vw, 96px);
+  align-items: center;
+  padding: 40px 0;
+}
+
+/* The rows are separated by space; only the second gets a rule. */
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.row h2 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: clamp(26px, 3.2vw, 40px);
+  line-height: 1.12;
+  letter-spacing: var(--title-tracking);
+  max-width: 18ch;
+}
+
+.rowAction {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+/* Under the button: a quiet second way in, text only. */
+.example {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: var(--title-weight);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: color 0.18s;
+}
+
+.example:hover,
+.example:focus-visible {
+  color: var(--accent-2);
+}
+
+.example svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  transition:
-    background 0.1s,
-    color 0.1s;
-}
-
-.btn:hover {
-  background: var(--fg);
-  color: var(--bg);
-}
-
-.btn.solid {
-  background: var(--accent);
-  color: var(--accent-ink);
-  border-color: var(--accent);
-}
-
-.btn.solid:hover {
-  background: var(--fg);
-  border-color: var(--fg);
-  color: var(--bg);
+  background: var(--accent-2);
+  color: var(--accent-fg);
+  padding: 8px 10px;
+  margin-bottom: 20px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav > *,
-  .btn {
+  .navRollIn {
+    transition: none;
+  }
+
+  .navMark:hover .navRollIn,
+  .navMark:focus-visible .navRollIn {
+    transform: none;
+  }
+
+  .navMark:hover .navRollIn span:first-child,
+  .navMark:focus-visible .navRollIn span:first-child {
+    display: none;
+  }
+
+  .gh,
+  .act,
+  .example {
     transition: none;
   }
 }

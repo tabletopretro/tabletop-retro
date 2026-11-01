@@ -20,6 +20,7 @@ import {
   setCharacterImage,
   updateCharacter,
 } from "@/lib/characters";
+import { refreshCastMember } from "@/lib/tables";
 
 /* Every export is a public endpoint: re-check session and ownership; ids and payloads are hostile. */
 
@@ -33,9 +34,13 @@ export type CharacterState = { ok: true; character: Character } | { ok: false; e
 
 const GONE = { ok: false, error: "This character no longer exists" } as const;
 
+/** The character as stored after a write, passed on to any open table that casts them. */
 function reread(character: OwnedCharacter): CharacterState {
   const fresh = characterForOwner(character.id, character.ownerId);
-  return fresh ? { ok: true, character: readCharacter(fresh) } : GONE;
+  if (!fresh) return GONE;
+  const stored = readCharacter(fresh);
+  refreshCastMember(stored);
+  return { ok: true, character: stored };
 }
 
 export async function createCharacterAction(name: unknown): Promise<CharacterState> {
@@ -61,6 +66,8 @@ export async function updateCharacterAction(characterId: string, patch: unknown)
     updateCharacter(character, {
       name: typeof p.name === "string" ? p.name : undefined,
       notes: typeof p.notes === "string" ? p.notes : undefined,
+      icon: "icon" in p ? (p.icon as CharacterPatch["icon"]) : undefined,
+      npc: typeof p.npc === "boolean" ? p.npc : undefined,
       // Checked field by field in updateCharacter; anything malformed is dropped.
       fields: "fields" in p ? (p.fields as CharacterPatch["fields"]) : undefined,
     });

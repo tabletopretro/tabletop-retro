@@ -29,6 +29,12 @@ Running more needs a shared bus (Redis pub/sub, Postgres LISTEN) behind
 `publishTable` / `subscribeTable` and a database that takes concurrent
 writers. Both are seams in the code, not features.
 
+If you do outgrow one container, use **PostgreSQL** and nothing cleverer:
+swap the Drizzle driver in `db/index.ts` (`drizzle-orm/node-postgres`),
+port `db/schema.ts` to `pg-core` types, and let Postgres `LISTEN/NOTIFY`
+carry the table bus. Don't build a sync layer or a fallback between two
+databases; one database, one source of truth.
+
 ## Storage
 
 Everything durable lives in two places, and they belong together: rows
@@ -162,6 +168,9 @@ services:
     build: .
     restart: unless-stopped
     volumes: [data:/data]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:1313/api/health"]
+      interval: 30s
   proxy:
     image: caddy:2
     restart: unless-stopped
@@ -171,6 +180,9 @@ volumes:
   data:
   caddy:
 ```
+
+`GET /api/health` answers 200 once the database does and 503 otherwise;
+point your load balancer's or orchestrator's probe at it.
 
 First run, then after any schema change:
 

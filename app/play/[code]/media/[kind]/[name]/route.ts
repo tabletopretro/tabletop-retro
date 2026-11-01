@@ -1,5 +1,6 @@
 import { docImages, docSounds, docVideos, IMAGE_NAME_PATTERN, SOUND_NAME_PATTERN, VIDEO_NAME_PATTERN } from "@/lib/campaign-doc";
 import { campaignById, campaignImagePath, campaignSoundPath, campaignVideoPath } from "@/lib/campaigns";
+import { castPortraitPath } from "@/lib/characters";
 import { playerAccess } from "@/lib/player-access";
 import { serveMedia } from "@/lib/serve-file";
 import type { TableSnapshot } from "@/lib/tables";
@@ -24,6 +25,12 @@ export async function GET(request: Request, ctx: RouteContext<"/play/[code]/medi
   }
   if (kind === "sounds" && SOUND_NAME_PATTERN.test(name) && docSounds(snapshot.doc).includes(name)) {
     const file = campaignSoundPath(campaign, name);
+    return file ? serveMedia(request, file) : notFound();
+  }
+  // Portraits: only a cast member's, as the snapshot has it.
+  const sitter = kind === "portraits" ? snapshot.cast?.find((c) => c.portrait === name) : undefined;
+  if (sitter) {
+    const file = castPortraitPath(sitter.id, name);
     return file ? serveMedia(request, file) : notFound();
   }
   return notFound();

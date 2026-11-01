@@ -94,20 +94,21 @@ Use these words everywhere: UI, identifiers, routes, docs.
 | Table Lead (TL) | Whoever opens a table |
 | Player | Anyone who joins a table with its code |
 
-A table is always in one of two states:
+A table is always in one of three states (`TABLE_STATES`, `db/schema.ts`):
 
 | State | Means | Entered by |
 | ----- | ----- | ---------- |
 | Open | Players can join with the code and pick characters, at any point | "Open table for players" in Present |
+| In session | The story has started. Everyone seated carries on; a new player is refused unless **late seats** are on | "Start the story" in the Table menu |
 | Closed | Over; the code stops working, the record stays | "Close table" |
 
-**Planned: In session.** A third state between the two, for once the
-story has started: the Table Lead presses "Start the story", and from
-then on a new player needs the Table Lead's say-so to sit down (let in
-one by one, or late seats turned on for the table). It would go in
-`TABLE_STATES` (`db/schema.ts`), be checked in `joinTable`
-(`app/actions.ts`) and `takeSeatAction` (`app/play/[code]/actions.ts`),
-and need a waiting state on the player side.
+Late seats (`tables.late_seats`) is a switch in the same menu, off by
+default: on, the code seats newcomers as in Open. `joinTable`
+(`app/actions.ts`) and `takeSeatAction` (`app/play/[code]/actions.ts`)
+check it; the message says the table is in session, which does confirm
+the code, unlike the wrong-code/closed answer (`NOT_OPEN`). Letting one
+player in by hand isn't built yet; the player sees the message and tries
+again.
 
 "Live" is fine as a casual badge for any table that isn't Closed, but it
 is not a state. "Publish" is reserved for a future campaign-template
@@ -129,6 +130,12 @@ spacing), checked inside the same synchronous transaction as the insert
 or rename; the DB row owns the title and the JSON copy follows it.
 Deleting a campaign removes the row and its folder, but is refused while
 any table references it, since tables keep the history.
+
+**Teams** (`teams`, `memberships`): a user belongs to teams, a campaign
+may belong to one (`campaigns.team_id`), and a table copies that at open
+(`tables.team_id`). A user's teams decide whose live tables their home
+could list (`tablesForUser`, `lib/home-data.ts`). Local sign-in puts new
+users on the first team; the seed makes one. No team UI exists yet.
 
 ### The campaign document
 
@@ -177,7 +184,11 @@ mode under `<Activity>` that shares the selection.
 
 Characters live in the owner's **character library**, not in a campaign:
 a `characters` row (name, notes, portrait, optional artwork, custom
-fields) with images under `content/characters/<id>/`. A
+fields, a built-in `icon` shown when there's no portrait, and an `npc`
+flag) with images under `content/characters/<id>/`. An NPC is played by
+the Table Lead: players can't pick one, lists put NPCs after the player
+characters, and its voice is the "Voiced by" custom field
+(`characterVoicedBy`). A
 campaign's JSON has `cast: [characterId, …]` and `campaign_characters`
 mirrors it so "which campaigns use this character?" is a query. Every
 save runs `syncCast`, which keeps only the owner's own characters in the
@@ -188,7 +199,7 @@ gone.
 
 ## Tables and the player side
 
-- **Codes** (`lib/table-code.ts`): `KQXMB-274`, 5 letters + 3 digits from a
+- **Codes** (`lib/table-code.ts`): `KQXMB274`, 5 letters then 3 digits from a
   readable alphabet, with a small word blocklist. Each campaign keeps
   **one code for good** (`campaigns.table_code`, unique), claimed on first
   use. It only lets players in while the campaign's table is open. "New
@@ -196,10 +207,15 @@ gone.
 - **Presenting ≠ opening.** Present is the TL's view, private. "Open table
   for players" opens a table: it saves, snapshots the campaign
   (`snapshotOf`: page names, chapter titles, speaker, opener and
-  character notes, portraits, artwork and fields left out, so players
-  see each character's name only) and shows the code. One live
-  table per campaign. Portraits on the player side are a gap, not a
-  rule: sending them means serving them through the play media route.
+  character notes and artwork left out; each cast member keeps their
+  name, icon, portrait and the public card fields "Race", "Played by"
+  and "Voiced by", via `snapshotCastMember`) and shows the code. One
+  live table per campaign. Portraits reach players through the play
+  media route (`/play/[code]/media/portraits/<name>`), only for files the
+  table's snapshot cast still names. Editing a character in the library calls
+  `refreshCastMember`, which rewrites that member in every live table's
+  snapshot, so a new portrait never shows as a broken image until the
+  next campaign save.
   The snapshot holds every slide, including ones not shown yet;
   holding back future slides would mean serving them one at a time.
 - **Edits go live on save.** While a table is open, every save refreshes

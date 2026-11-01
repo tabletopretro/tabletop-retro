@@ -51,3 +51,8 @@
     transition: none;
   }
 }
+
+/* Accent touches: the hue answers hover and focus on quiet controls (docs/design.md). */
+.wordmark:hover {
+  color: var(--accent-touch);
+}

@@ -14,7 +14,7 @@ export function tableSubjects(seats: readonly Seat[] | null, cast: readonly Char
     if (character) {
       return { ...character, id: seat.id, portrait: null, name: `${character.name.trim() || UNTITLED_CHARACTER} (${seat.name})` };
     }
-    return { id: seat.id, name: seat.name, notes: "", portrait: null, artwork: null, fields: [], campaigns: [] };
+    return { id: seat.id, name: seat.name, notes: "", portrait: null, artwork: null, icon: null, npc: false, fields: [], campaigns: [] };
   });
 }
 

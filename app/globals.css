@@ -7,10 +7,11 @@
   --fg-muted: #a1a1aa;
   --fg-subtle: #8b8b94;
   --border: #2a2a2f;
-  --accent: #ececef;
-  --accent-fg: #111113;
+  /* The site's periwinkle and amber: one hue for "you can act on this", one for structure. Both AA on --bg and --surface. */
+  --accent: #6781f7;
+  --accent-fg: #1c1e26;
   --danger: #e5484d;
-  --focus: var(--fg);
+  --focus: var(--accent);
 
   /* Flat: radii stay 0; exceptions set their own radius. */
   --radius-sm: 0;
@@ -24,8 +25,8 @@
   --title-tracking: -0.01em;
   --title-transform: none;
   /* Second hue: structure worth noticing, never anything clickable. */
-  --accent-2: var(--fg-subtle);
-  /* Accent for small touches (caret, selection, quiet hovers). */
+  --accent-2: #f7c96b;
+  /* Accent for small touches (caret, selection, quiet hovers); cobalt is soft enough to use as is. */
   --accent-touch: var(--accent);
 
   color-scheme: dark;
@@ -40,12 +41,23 @@
     --fg-muted: #52525b;
     --fg-subtle: #71717a;
     --border: #e4e4e7;
-    --accent: #18181b;
+    /* The same two hues, deepened for a light page. */
+    --accent: #3449c9;
     --accent-fg: #fafafa;
+    --accent-2: #9a6a08;
     --danger: #dc2626;
 
     color-scheme: light;
   }
+}
+
+:is(input, textarea) {
+  caret-color: var(--accent-touch);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent-touch) 30%, transparent);
+  color: var(--fg);
 }
 
 *,

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { NOT_OPEN } from "@/lib/not-open";
+import { IN_SESSION, NOT_OPEN } from "@/lib/not-open";
 import { playerAccess } from "@/lib/player-access";
 import type { TableSnapshot } from "@/lib/tables";
 import { JoinForm } from "../../join-form";
@@ -24,6 +24,19 @@ export default async function PlayPage({ params }: PageProps<"/play/[code]">) {
         <h1 className={styles.title}>{NOT_OPEN}</h1>
         {code ? <WaitForTable code={code} /> : null}
         <JoinForm size="compact" />
+        <Link href="/" className={styles.home}>
+          Tabletop Retro
+        </Link>
+      </main>
+    );
+  }
+
+  // Seated players carry on once the story's started; only new seats wait for late seats.
+  if (!seat && table.state === "in_session" && !table.lateSeats) {
+    return (
+      <main className={styles.center}>
+        <p className={styles.eyebrow}>{table.code}</p>
+        <h1 className={styles.title}>{IN_SESSION}</h1>
         <Link href="/" className={styles.home}>
           Tabletop Retro
         </Link>

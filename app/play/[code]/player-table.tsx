@@ -53,6 +53,10 @@ export function PlayerTable({
   const snapshotAt = useRef(initialSnapshot.savedAt ?? 0);
   const order = useRef<string[]>([]);
   const slides = slidesOf(snapshot.doc);
+  // Portraits come through the table (the owner-only route won't serve a player).
+  const cast = snapshot.cast.map((c) => (c.portrait ? { ...c, portraitSrc: `/play/${code}/media/portraits/${c.portrait}` } : c));
+  // NPCs are played by the Table Lead, so players only pick from player characters.
+  const playerCast = cast.filter((c) => !c.npc);
   const [slideId, setSlideId] = useState(initialSlide);
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [open, setOpen] = useState(true);
@@ -68,7 +72,7 @@ export function PlayerTable({
   const prefs = useSoundPrefs();
   // Sound already chosen on an earlier visit: skip the sound screen.
   const settled = arrived || prefs.chosen;
-  const subjects = tableSubjects(seats, snapshot.cast);
+  const subjects = tableSubjects(seats, cast);
   const subjectOf = (seat: string | null) => subjects.find((x) => x.id === seat) ?? null;
   const nameOf = (seat: string) => subjectOf(seat)?.name ?? "Someone who left";
   const names = { nameOf, subjects };
@@ -122,14 +126,14 @@ export function PlayerTable({
   const slide = slides.find((s) => s.id === slideId) ?? slides[0] ?? null;
   const mediaBase = `/play/${code}/media`;
   const follow = playback && slide && playback.slide === slide.id ? playback : null;
-  const myCharacter = snapshot.cast.find((c) => c.id === seats.find((s) => s.id === seatId)?.characterId);
+  const myCharacter = playerCast.find((c) => c.id === seats.find((s) => s.id === seatId)?.characterId);
 
   return (
     <div className={styles.table} data-chat={open && chatOpen ? "" : undefined}>
       <header className={styles.bar}>
         <span className={styles.barTitle}>{title}</span>
         <span className={styles.barRight}>
-          {snapshot.cast.length > 0 ? (
+          {playerCast.length > 0 ? (
             <button type="button" className={styles.barSound} onClick={() => setPicking(true)}>
               {myCharacter ? `as ${myCharacter.name.trim() || UNTITLED_CHARACTER}` : "Pick a character"}
             </button>
@@ -160,7 +164,7 @@ export function PlayerTable({
                 <PlayerScreen
                   mediaBase={mediaBase}
                   page={slide.page}
-                  cast={snapshot.cast}
+                  cast={cast}
                   video={{ mode: "follow", playback: follow, volume: videoVolume(prefs) }}
                   activity={{ feed, names, seats, play }}
                 />
@@ -222,7 +226,7 @@ export function PlayerTable({
         open={!settled || settingsOpen}
         gate={!settled}
         onClose={() => {
-          if (!settled && !myCharacter && snapshot.cast.length > 0) setPicking(true);
+          if (!settled && !myCharacter && playerCast.length > 0) setPicking(true);
           setArrived(true);
           setSettingsOpen(false);
         }}
@@ -230,7 +234,7 @@ export function PlayerTable({
       <CharacterPicker
         open={settled && picking}
         code={code}
-        cast={snapshot.cast}
+        cast={playerCast}
         seats={seats}
         mySeat={seatId}
         onClose={() => setPicking(false)}

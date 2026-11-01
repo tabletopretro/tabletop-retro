@@ -21,6 +21,20 @@ export function listLocalUsers() {
     .all();
 }
 
+/** The seeded example: ids fixed in db/seed.mjs so "Open the example retro" can find it. */
+const EXAMPLE = { userId: "user-ada", campaignId: "campaign-example-retro" };
+
+/** The example campaign and its owner, when the seed has run; null otherwise. */
+export function exampleRetro() {
+  assertLocalSignIn();
+  const row = db
+    .select({ id: schema.campaigns.id, ownerId: schema.campaigns.ownerId })
+    .from(schema.campaigns)
+    .where(and(eq(schema.campaigns.id, EXAMPLE.campaignId), eq(schema.campaigns.ownerId, EXAMPLE.userId)))
+    .get();
+  return row && isLocalUser(row.ownerId) ? row : null;
+}
+
 export function isLocalUser(userId: string): boolean {
   assertLocalSignIn();
   return Boolean(
@@ -48,6 +62,17 @@ export function createLocalUser(name: string): string {
     tx.insert(schema.accounts)
       .values({ provider: "local", providerAccountId: user.id, userId: user.id })
       .run();
+    // New local users join the first team so they see its tables.
+    const team = tx
+      .select({ id: schema.teams.id })
+      .from(schema.teams)
+      .orderBy(asc(schema.teams.createdAt))
+      .get();
+    if (team) {
+      tx.insert(schema.memberships)
+        .values({ teamId: team.id, userId: user.id })
+        .run();
+    }
     return user.id;
   });
 }

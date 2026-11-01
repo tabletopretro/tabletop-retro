@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { playerAccess } from "@/lib/player-access";
 import type { ActivityResult } from "@/activities/types";
 import { runPlayerAction } from "@/lib/activity-runtime";
-import { NOT_OPEN } from "@/lib/not-open";
+import { IN_SESSION, NOT_OPEN } from "@/lib/not-open";
 import { allow, clientKey } from "@/lib/rate-limit";
 import { postChat, type PostChatResult } from "@/lib/table-chat";
 import {
@@ -28,6 +28,7 @@ export async function takeSeatAction(rawCode: string, _prev: SeatState, formData
   const { code, table, seat, user } = await playerAccess(rawCode);
   if (!code || !table) return { error: NOT_OPEN };
   if (seat) redirect(`/play/${code}`);
+  if (table.state === "in_session" && !table.lateSeats) return { error: IN_SESSION };
   // Seats are cheap to ask for and never expire, so cap them per table and per network.
   if (!allow(`seat:${clientKey(await headers())}`, 12, 10 * 60_000)) {
     return { error: "Too many seats taken from your network just now; try again in a few minutes" };
@@ -53,13 +54,13 @@ export async function takeSeatAction(rawCode: string, _prev: SeatState, formData
 
 export type PickState = { ok: true } | { ok: false; error: string };
 
-/** `null` lets the character go. A character someone else holds is refused. */
+/** `null` lets the character go. A character someone else holds, or an NPC (the Table Lead's), is refused. */
 export async function pickCharacterAction(rawCode: string, characterId: unknown): Promise<PickState> {
   const { table, seat } = await playerAccess(rawCode);
   if (!table || !seat) return { ok: false, error: "Take a seat first" };
   if (characterId !== null) {
     const cast = (table.snapshot as TableSnapshot).cast ?? [];
-    if (typeof characterId !== "string" || !cast.some((c) => c.id === characterId)) {
+    if (typeof characterId !== "string" || !cast.some((c) => c.id === characterId && !c.npc)) {
       return { ok: false, error: "That character isn't in this campaign" };
     }
   }

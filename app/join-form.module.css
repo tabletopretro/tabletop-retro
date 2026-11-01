@@ -11,44 +11,65 @@
   border-color: var(--accent);
 }
 
-.codeField input {
+/* The input and its mirror share every metric, so the mirror's block lands where the native caret would. */
+/* --field-h is the field's outer height; app/page.module.css sizes the Build button to the same value. */
+.codeField {
+  --field-h: 88px;
+}
+
+.codeField input,
+.mirror {
   min-width: 0;
-  padding: 18px 20px 18px calc(20px + 0.62em + 12px);
-  border: 0;
-  background: none;
-  outline: 0;
+  height: calc(var(--field-h) - 4px);
+  padding: 0 20px;
   font-family: var(--font-body);
   font-size: 40px;
   font-weight: 500;
+  line-height: 1;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  caret-color: var(--accent);
+  white-space: pre;
 }
 
-.codeField input::placeholder {
-  opacity: 0.7;
-  color: var(--fg-subtle);
+.codeField input {
+  border: 0;
+  background: none;
+  outline: 0;
+  /* The block below is the caret. */
+  caret-color: transparent;
 }
 
-.caret {
+.mirror {
   position: absolute;
-  left: 20px;
-  top: 50%;
-  translate: 0 -50%;
+  inset: 0 auto 0 0;
+  display: flex;
+  align-items: center;
+  color: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Still until the field has focus: a standing invitation to type; blinking once it does. */
+.caret {
+  flex: none;
   width: 0.62em;
   height: 1.05em;
-  font-size: 40px;
   background: var(--accent);
-  animation: blink 1s steps(1) infinite;
-  pointer-events: none;
 }
 
 .codeField:focus-within .caret {
-  animation: none;
+  animation: blink 1s steps(1) infinite;
 }
 
-.codeField input:not(:placeholder-shown) ~ .caret {
-  display: none;
+/* The whole frame goes accent on focus, the divider before Join included. */
+.codeField:focus-within button {
+  border-left-color: var(--accent);
+}
+
+.ghost {
+  margin-left: 12px;
+  color: var(--fg-subtle);
+  opacity: 0.7;
 }
 
 .codeField button {
@@ -58,11 +79,11 @@
   color: var(--accent-fg);
   padding: 0 26px;
   cursor: pointer;
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  /* Buttons are title type in sentence case everywhere; caps are for labels only. */
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 40px;
+  letter-spacing: 0.01em;
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -91,19 +112,23 @@
   color: var(--accent);
 }
 
-.codeField[data-size="compact"] input {
-  padding: 10px 14px 10px calc(14px + 0.62em + 10px);
+.codeField[data-size="compact"] {
+  --field-h: 48px;
+}
+
+.codeField[data-size="compact"] input,
+.codeField[data-size="compact"] .mirror {
+  padding: 0 14px;
   font-size: 20px;
 }
 
-.codeField[data-size="compact"] .caret {
-  left: 14px;
-  font-size: 20px;
+.codeField[data-size="compact"] .ghost {
+  margin-left: 10px;
 }
 
 .codeField[data-size="compact"] button {
   padding: 0 16px;
-  font-size: 12px;
+  font-size: 15px;
   gap: 8px;
 }
 

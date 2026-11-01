@@ -2,6 +2,10 @@ import type { ReactNode } from "react";
 
 /**
  * Stroke is divided by render scale so every icon gets the same 1.5px line.
+ *
+ * Campfire, candle and feather are from Tabler Icons (MIT, Copyright (c)
+ * 2020-2026 Paweł Kuna); the candle's wick is ours so it reads as a
+ * candle while unlit.
  */
 const STROKE_PX = 1.5;
 const GRID = 24;
@@ -132,6 +136,45 @@ export function VoteIcon(props: IconProps) {
   return (
     <Icon {...props}>
       <path d="M3 13h18v7H3zM8 13V4h8v9M10.5 8.5l1 1 2-2.5" />
+    </Icon>
+  );
+}
+
+export function CampfireIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 21l16 -4M20 21l-16 -4" />
+      <path d="M12 15a4 4 0 0 0 4 -4c0 -3 -2 -3 -2 -8c-4 2 -6 5 -6 8a4 4 0 0 0 4 4" />
+      <path d="M16.5 6h.01" />
+      <path d="M8 7.5h.01" />
+    </Icon>
+  );
+}
+
+export function CandleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 21h6v-10a1 1 0 0 0 -1 -1h-4a1 1 0 0 0 -1 1l0 10" />
+      <path d="M12 8v2" />
+      <path d="M12 2l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737" />
+    </Icon>
+  );
+}
+
+export function FeatherIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 20l10 -10m0 -5v5h5m-9 -1v5h5m-9 -1v5h5m-5 -5l4 -4l4 -4" />
+      <path d="M19 10c.638 -.636 1 -1.515 1 -2.486a3.515 3.515 0 0 0 -3.517 -3.514c-.97 0 -1.847 .367 -2.483 1m-3 13l4 -4l4 -4" />
+      <path d="M5 21.5h7" />
+    </Icon>
+  );
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10.5 4a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM15.5 15.5L20 20" />
     </Icon>
   );
 }

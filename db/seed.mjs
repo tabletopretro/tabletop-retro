@@ -6,17 +6,21 @@ import Database from "better-sqlite3";
 const db = new Database(process.env.DATABASE_PATH ?? "dev.db");
 db.pragma("foreign_keys = ON");
 
+const TEAM = { id: "team-retro-crew", name: "Retro Crew", slug: "retro-crew" };
+
+/** The first user is the team's admin; new local users join this team too (lib/auth/local.ts). */
 const USERS = [
-  { id: "user-ada", name: "Ada" },
-  { id: "user-morgan", name: "Morgan" },
-  { id: "user-sam", name: "Sam" },
-  { id: "user-riley", name: "Riley" },
+  { id: "user-ada", name: "Ada", role: "admin" },
+  { id: "user-morgan", name: "Morgan", role: "member" },
+  { id: "user-sam", name: "Sam", role: "member" },
+  { id: "user-riley", name: "Riley", role: "member" },
 ];
 
 /** Fixed ids so re-seeding is a no-op. */
 const CAMPAIGN = {
   id: "campaign-example-retro",
   ownerId: USERS[0].id,
+  teamId: TEAM.id,
   title: "Example retro",
   contentPath: "example-retro-seed0001",
 };
@@ -60,6 +64,13 @@ const DOC = {
         effect: null,
       },
       pages: [
+        page("page000000", {
+          title: "Start here",
+          heading: "This is the example retro",
+          text: "A retrospective told as a playable story. Change anything on this page and watch the slide update.",
+          notes:
+            "You're in the editor. The outline on the left is chapters and pages; this slide is the page you've selected. Edit the heading or text above and it saves on its own (⌘Z undoes). Press + in the outline to add a story page or an activity (Q&A, vote, dice), and Present at the top to play it. When you're ready for your own, open the library and press New campaign.",
+        }),
         page("page000001", {
           heading: "Welcome to the table",
           text: "Everyone joins with the table code on their own device. The Table Lead moves the slides; you answer on yours.",
@@ -104,17 +115,21 @@ const DOC = {
 };
 
 const seed = db.transaction(() => {
+  db.prepare("INSERT OR IGNORE INTO teams (id, name, slug) VALUES (@id, @name, @slug)").run(TEAM);
   for (const u of USERS) {
-    db.prepare("INSERT OR IGNORE INTO users (id, name) VALUES (@id, @name)").run(u);
+    db.prepare("INSERT OR IGNORE INTO users (id, name) VALUES (@id, @name)").run({ id: u.id, name: u.name });
     db.prepare(
       "INSERT OR IGNORE INTO accounts (provider, provider_account_id, user_id) VALUES ('local', @id, @id)",
-    ).run(u);
+    ).run({ id: u.id });
+    db.prepare(
+      "INSERT OR IGNORE INTO memberships (team_id, user_id, role) VALUES (@team, @id, @role)",
+    ).run({ team: TEAM.id, id: u.id, role: u.role });
   }
 
   const existing = db.prepare("SELECT id FROM campaigns WHERE id = ?").get(CAMPAIGN.id);
   if (existing) return false;
   db.prepare(
-    "INSERT INTO campaigns (id, owner_id, title, content_path) VALUES (@id, @ownerId, @title, @contentPath)",
+    "INSERT INTO campaigns (id, owner_id, team_id, title, content_path) VALUES (@id, @ownerId, @teamId, @title, @contentPath)",
   ).run(CAMPAIGN);
   const folder = path.join(process.env.CONTENT_DIR ?? path.join(process.cwd(), "content"), "campaigns", CAMPAIGN.contentPath);
   mkdirSync(folder, { recursive: true });
@@ -123,4 +138,4 @@ const seed = db.transaction(() => {
 });
 
 const created = seed();
-console.log(`Seeded ${USERS.length} users${created ? ` and the "${CAMPAIGN.title}" campaign` : ""}.`);
+console.log(`Seeded ${USERS.length} users on team "${TEAM.name}"${created ? ` and the "${CAMPAIGN.title}" campaign` : ""}.`);

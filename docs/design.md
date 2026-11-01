@@ -27,21 +27,20 @@ shell copy or token names.
   options): flat and square with a border.
 - **No large grey fills.** Panels and frames are bordered, not filled;
   grey backgrounds are for small states only (a selected row, a hover).
-- **Monochrome, by decision.** The shipped theme has no accent hue:
-  `--accent` is the foreground color, `--accent-2` is `--fg-subtle` and
-  `--accent-touch` is `--accent`. Interaction is shown with washes,
-  borders and weight, not color. Keep it that way in the core.
-- **Two accents, fixed jobs.** If a fork wants color, the recommended
-  scheme is two hues with fixed meanings, set once in `app/globals.css`
-  (both the dark `:root` set and the light one): `--accent` means "you
-  can interact with this" (primary actions, focus, hover confirmation,
-  drop targets); `--accent-2` marks structure that isn't clickable (page
-  and chapter numbers, eyebrows). Neither is ever decoration. Set
-  `--accent-touch` to a softer version of `--accent` for small touches
-  (caret, selection, the selected page's bar, quiet hovers) when the
-  full hue is too loud at that scale; `--accent-fg` is the text color on
-  an `--accent` fill. Every stylesheet already reads these tokens, so no
-  rule needs to change; check contrast on buttons and the slide frame.
+- **Zinc + periwinkle, two accents with fixed jobs.** The shipped theme is a
+  zinc neutral base with two hues, set once in `app/globals.css` (both
+  the dark `:root` set and the light one): `--accent` (periwinkle, the site's blue) means
+  "you can interact with this" (primary actions, focus, hover
+  confirmation, drop targets, the caret and selection); `--accent-2`
+  (amber) marks structure that isn't clickable (page and chapter numbers,
+  eyebrows). Neither is ever decoration, and everything else stays
+  grey: washes, borders and weight still do most of the work.
+  `--accent-touch` is the accent for small touches (caret, selection,
+  the selected page's bar, quiet hovers); it equals `--accent` because
+  periwinkle is soft enough, but a fork with a louder hue sets it to a
+  softer version. `--accent-fg` is the text color on an `--accent` fill.
+  To retheme, change the tokens only; every stylesheet reads them, and
+  check contrast on buttons and the slide frame.
 - **No side stripes.** No coloured bar down one edge of a card, quote,
   list or tooltip. Use type, spacing or a full border instead.
 - **No redundant rules.** Don't add a horizontal line where whitespace or

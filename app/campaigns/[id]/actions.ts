@@ -7,6 +7,7 @@ import { IMAGE_MAX_BYTES, IMAGE_NAME_PATTERN, parseCampaignDoc, SOUND_NAME_PATTE
 import {
   CAMPAIGN_TITLE_MAX,
   campaignForOwner,
+  copyCampaignMedia,
   deleteCampaign,
   detectImageType,
   normalizeCampaignTitle,
@@ -102,6 +103,25 @@ export async function uploadPageImageAction(
   const ext = detectImageType(bytes);
   if (!ext) return { ok: false, error: "Use a WebP, PNG, JPEG or GIF" };
   return { ok: true, name: saveCampaignImage(owned.campaign, bytes, ext) };
+}
+
+export type PasteMediaState = { ok: true } | { ok: false; error: string };
+
+/**
+ * Brings the media of pages copied from another campaign into this one,
+ * before they're pasted. Both campaigns must be the caller's own, only
+ * names we could have generated are copied, and the copies count against
+ * the owner's storage budget like any upload.
+ */
+export async function copyPastedMediaAction(campaignId: string, fromCampaignId: string, names: unknown): Promise<PasteMediaState> {
+  const owned = await ownedCampaign(campaignId);
+  if (!owned) return { ok: false, error: "This campaign no longer exists" };
+  const from = typeof fromCampaignId === "string" ? campaignForOwner(fromCampaignId, owned.user.id) : null;
+  if (!from) return { ok: false, error: "Those pages came from a campaign you can't open" };
+  const list = Array.isArray(names) ? names.filter((n): n is string => typeof n === "string").slice(0, 200) : [];
+  const result = copyCampaignMedia(from, owned.campaign, list, storageLeft(owned.user.id));
+  if (result.full) return { ok: false, error: STORAGE_FULL };
+  return result.missed > 0 ? { ok: false, error: "Some of the copied pages' media couldn't be brought over" } : { ok: true };
 }
 
 export type DeleteState = { ok: false; error: string };

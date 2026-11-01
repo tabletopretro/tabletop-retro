@@ -4,10 +4,14 @@ import Link from "next/link";
 import { type DragEvent, useState, useTransition } from "react";
 import { IMAGE_MAX_BYTES, IMAGE_TYPES } from "@/lib/campaign-doc";
 import {
+  CHARACTER_ICONS,
   CHARACTER_LIMITS,
   characterNameError,
+  characterVoicedBy,
   normalizeCharacterName,
+  setCharacterVoicedBy,
   UNTITLED_CHARACTER,
+  VOICED_BY_FIELD,
   type Character,
   type CharacterField,
   type CharacterImageField,
@@ -19,13 +23,14 @@ import { CheckIcon, CloseIcon, PencilIcon, PlusIcon, TrashIcon, UploadIcon } fro
 import { PrivateHint } from "../private-hint";
 import { Tooltip } from "../tooltip";
 import { removeCharacterImageAction, uploadCharacterImageAction } from "./actions";
-import { CharacterPortrait } from "./character-portrait";
+import { CHARACTER_ICON_COMPONENTS, CharacterPortrait } from "./character-portrait";
 import styles from "./character.module.css";
 
 /** Saves to the library directly, outside any campaign's undo: a character is shared. */
 export function CharacterEditor({
   character,
   campaignId,
+  voiceOptions = [],
   onRename,
   onChange,
   onReplaced,
@@ -35,6 +40,8 @@ export function CharacterEditor({
   character: Character;
   /** The campaign it was opened from; absent in the library. */
   campaignId?: string;
+  /** Human names an NPC can be voiced by. */
+  voiceOptions?: string[];
   /** Resolves to an error message, or null. */
   onRename: (name: string) => Promise<string | null>;
   onChange: (patch: Omit<CharacterPatch, "name">) => void;
@@ -46,11 +53,27 @@ export function CharacterEditor({
   const portrait = useCharacterImage(character.id, "portrait", onReplaced);
   const artwork = useCharacterImage(character.id, "artwork", onReplaced);
   const elsewhere = character.campaigns.filter((c) => c.id !== campaignId);
+  const voicedBy = characterVoicedBy(character);
+  // "Voiced by" is a custom field under the hood, but has its own control.
+  const customFields = character.fields.filter((field) => field.label.trim().toLocaleLowerCase() !== VOICED_BY_FIELD.toLocaleLowerCase());
+  const voiceChoices = [...new Set(["Table Lead", voicedBy, ...voiceOptions].map((option) => option.trim()).filter(Boolean))];
 
   return (
     <article className={editor.pageEditor}>
       <header className={styles.head}>
         <NameField key={character.id} name={character.name} onRename={onRename} />
+        <Tooltip content="Played by you, not a player; listed after the player characters" side="bottom">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={character.npc}
+            className={styles.npcToggle}
+            onClick={() => onChange({ npc: !character.npc, fields: character.npc ? setCharacterVoicedBy(character.fields, "") : character.fields })}
+          >
+            NPC
+            <span className={styles.npcSwitch} aria-hidden />
+          </button>
+        </Tooltip>
         {onRemove ? (
           <Tooltip content="⌘Z brings them back" side="bottom">
             <button type="button" className={editor.toolButton} onClick={onRemove}>
@@ -82,6 +105,42 @@ export function CharacterEditor({
                 <UploadIcon size={18} />
                 {portrait.busy ? "Uploading…" : "Upload an image"}
               </button>
+              {/* NPCs are an image or their initial; the icons are for players' characters. */}
+              {character.npc ? null : (
+                <div className={styles.iconPicker} role="radiogroup" aria-label="Or pick an icon">
+                  <Tooltip content="First letter">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={character.icon === null}
+                      aria-label="First letter of the name"
+                      className={styles.iconChoice}
+                      onClick={() => onChange({ icon: null })}
+                    >
+                      <span className={styles.iconLetter}>
+                        {character.name.trim().charAt(0).toLocaleUpperCase() || "A"}
+                      </span>
+                    </button>
+                  </Tooltip>
+                  {CHARACTER_ICONS.map(({ id, label: iconLabel }) => {
+                    const Icon = CHARACTER_ICON_COMPONENTS[id];
+                    return (
+                      <Tooltip key={id} content={iconLabel}>
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={character.icon === id}
+                          aria-label={iconLabel}
+                          className={styles.iconChoice}
+                          onClick={() => onChange({ icon: id })}
+                        >
+                          <Icon size={24} />
+                        </button>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
           {portrait.picker}
@@ -134,7 +193,28 @@ export function CharacterEditor({
             ) : null}
           </section>
 
-          <CustomFields fields={character.fields} onChange={(fields) => onChange({ fields })} />
+          {character.npc ? (
+            <label className={styles.voicedBy}>
+              <span className={editor.eyebrow}>Voiced by</span>
+              <select
+                className={styles.fieldValue}
+                value={voicedBy}
+                onChange={(event) => onChange({ fields: setCharacterVoicedBy(character.fields, event.target.value) })}
+              >
+                <option value="">Unassigned</option>
+                {voiceChoices.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          <CustomFields
+            fields={customFields}
+            onChange={(fields) => onChange({ fields: voicedBy ? setCharacterVoicedBy(fields, voicedBy) : fields })}
+          />
 
           <section className={editor.notesBlock}>
             <div className={editor.notesLabel}>

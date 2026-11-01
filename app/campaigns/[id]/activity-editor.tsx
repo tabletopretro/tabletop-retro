@@ -114,7 +114,8 @@ export function ActivityEditor({
   );
 }
 
+/** "Off", "30s", "90s", "1 min", "10 min": seconds unless a whole number of minutes. */
 export function timerLabel(seconds: number) {
   if (seconds === 0) return "Off";
-  return seconds < 60 ? `${seconds}s` : `${seconds / 60} min`;
+  return seconds < 60 || seconds % 60 !== 0 ? `${seconds}s` : `${seconds / 60} min`;
 }

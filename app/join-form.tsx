@@ -19,23 +19,25 @@ export function JoinForm({ size = "large", autoFocus = false }: { size?: "large"
           name="code"
           value={code}
           onChange={(event) => setCode(event.target.value)}
-          placeholder={TABLE_CODE_EXAMPLE}
           aria-label="Table code"
+          aria-placeholder={TABLE_CODE_EXAMPLE}
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          maxLength={11}
+          maxLength={9}
           autoFocus={autoFocus}
           aria-invalid={state.error ? true : undefined}
           aria-describedby="table-code-error"
         />
+        {/* The block is the caret: a mirror of the typed text, in the input's own metrics, puts it after the last letter. */}
+        <span className={styles.mirror} aria-hidden>
+          {code}
+          <span className={styles.caret} />
+          {code ? null : <span className={styles.ghost}>{TABLE_CODE_EXAMPLE}</span>}
+        </span>
         <button type="submit" disabled={pending} aria-label="Join table">
           Join
-          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" />
-          </svg>
         </button>
-        <span className={styles.caret} aria-hidden />
       </div>
       <p id="table-code-error" className={styles.hint} aria-live="polite">
         {state.error}

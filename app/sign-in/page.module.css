@@ -72,3 +72,25 @@
   padding: 0;
   list-style: none;
 }
+
+/* Below the existing users, set apart by space alone. */
+.newUser {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 36px;
+  width: 280px;
+}
+
+.local + .newUser {
+  margin-top: 28px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--fg-subtle);
+}

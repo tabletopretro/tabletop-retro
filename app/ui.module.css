@@ -157,3 +157,15 @@
   }
 }
 
+/* Accent touches: the hue answers hover and focus on quiet controls (docs/design.md). */
+.secondary:hover:not(:disabled) {
+  border-color: var(--accent-touch);
+}
+
+.quiet:hover {
+  color: var(--accent-touch);
+}
+
+.field:focus-within {
+  border-color: var(--accent-touch);
+}

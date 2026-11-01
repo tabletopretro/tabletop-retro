@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { LOCAL_SIGN_IN_ENABLED } from "@/lib/auth/config";
-import { createLocalUser, isLocalUser } from "@/lib/auth/local";
+import { createLocalUser, exampleRetro, isLocalUser } from "@/lib/auth/local";
 import { createSession, deleteSession } from "@/lib/auth/session";
 
 // Every export is a public endpoint and guards itself. No SSO action until a provider really verifies identities.
@@ -13,6 +13,15 @@ export async function signInAsLocalUser(formData: FormData) {
   if (typeof userId !== "string" || !isLocalUser(userId)) redirect("/sign-in");
   await createSession(userId);
   redirect("/library");
+}
+
+/** Signs in as the example's owner and lands in its editor, so a first look is the editor itself. */
+export async function openExampleRetro() {
+  if (!LOCAL_SIGN_IN_ENABLED) redirect("/sign-in");
+  const example = exampleRetro();
+  if (!example) redirect("/sign-in");
+  await createSession(example.ownerId);
+  redirect(`/campaigns/${example.id}`);
 }
 
 export type CreateLocalUserState = { error: string | null };

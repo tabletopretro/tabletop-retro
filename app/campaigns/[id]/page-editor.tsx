@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useRef,
   useState,
   ViewTransition,
@@ -16,8 +17,15 @@ import {
   type CampaignPage, type SoundRef,
   type PageKind,
 } from "@/lib/campaign-doc";
-import { UNNAMED_CHARACTER, UNTITLED_CHARACTER, type Character } from "@/lib/character-doc";
+import {
+  characterVoicedBy,
+  displayHumanName,
+  UNNAMED_CHARACTER,
+  UNTITLED_CHARACTER,
+  type Character,
+} from "@/lib/character-doc";
 import { CharacterPortrait } from "../../characters/character-portrait";
+import { byRole } from "../../characters/character-search";
 import { ActivityIcon, ImageIcon, PlusIcon, QuoteIcon } from "../../icons";
 import { uploadPageImageAction } from "./actions";
 import { ActivityEditor } from "./activity-editor";
@@ -409,6 +417,16 @@ function KindChooser({ onPick }: { onPick: (kind: PageKind) => void }) {
   );
 }
 
+function characterField(character: Character, label: string) {
+  return character.fields.find((field) => field.label.trim().toLocaleLowerCase() === label.toLocaleLowerCase())?.value.trim() ?? "";
+}
+
+/** Who's behind a character at the table: an NPC's voice, or a player's "Played by". */
+function speakerTip(character: Character): string {
+  const human = character.npc ? characterVoicedBy(character) : displayHumanName(characterField(character, "Played by"));
+  return human ? `${character.npc ? "Voiced by" : "Played by"} ${human}` : "";
+}
+
 /** A speaker who left the cast or was deleted stays picked and reads as unnamed; never drop the reference. */
 function SpeechEditor({
   page,
@@ -423,17 +441,19 @@ function SpeechEditor({
 }) {
   const speaker = page.speakerId ? (cast.find((c) => c.id === page.speakerId) ?? null) : null;
   const orphaned = page.speakerId !== null && speaker === null;
+  const everyone = byRole(cast);
+  const grouped = everyone.some((c) => c.npc) && everyone.some((c) => !c.npc);
   return (
     <div className={styles.speech}>
       {cast.length === 0 && !orphaned ? (
         <p className={styles.speechEmpty}>Add a character to the cast to give them a line.</p>
       ) : (
         <div className={styles.speakers} role="radiogroup" aria-label="Speaker">
-          {cast.map((character) => {
+          {everyone.map((character, i) => {
             const name = character.name.trim() || UNTITLED_CHARACTER;
-            return (
+            const tip = speakerTip(character);
+            const row = (
               <button
-                key={character.id}
                 type="button"
                 role="radio"
                 aria-checked={page.speakerId === character.id}
@@ -443,6 +463,20 @@ function SpeechEditor({
                 <CharacterPortrait character={character} size={44} />
                 {name}
               </button>
+            );
+            return (
+              <Fragment key={character.id}>
+                {grouped && (i === 0 || everyone[i - 1].npc !== character.npc) ? (
+                  <p className={styles.speakerGroup}>{character.npc ? "NPCs" : "Players"}</p>
+                ) : null}
+                {tip ? (
+                  <Tooltip content={tip} side="top">
+                    {row}
+                  </Tooltip>
+                ) : (
+                  row
+                )}
+              </Fragment>
             );
           })}
           {orphaned ? (

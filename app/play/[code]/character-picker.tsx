@@ -25,6 +25,8 @@ export function CharacterPicker({
   const ref = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // NPCs belong to the Table Lead; the server refuses them too.
+  const playable = cast.filter((c) => !c.npc);
   const mine = seats.find((s) => s.id === mySeat)?.characterId ?? null;
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function CharacterPicker({
         Who are you playing?
       </h2>
       <ul className={styles.characterList}>
-        {cast.map((character) => {
+        {playable.map((character) => {
           const takenBy = seats.find((s) => s.characterId === character.id && s.id !== mySeat);
           return (
             <li key={character.id}>

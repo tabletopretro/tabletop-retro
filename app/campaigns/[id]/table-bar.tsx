@@ -10,6 +10,8 @@ import {
   closeTableAction,
   newCodeAction,
   openTableAction,
+  setLateSeatsAction,
+  startStoryAction,
   type TableInfo,
 } from "./table-actions";
 
@@ -220,6 +222,49 @@ export function PresentTableBar({
                 {copied ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
               </span>
             </button>
+          </div>
+          {info.table.state === "open" ? (
+            <Tooltip content="New players need your say-so once the story's started" side="bottom" className={styles.menuOptionWrap}>
+              <button
+                type="button"
+                className={styles.presentOption}
+                aria-disabled={pending}
+                onClick={() => {
+                  if (pending) return;
+                  run(async () => {
+                    const next = await startStoryAction(campaignId);
+                    if (next) onInfo(next);
+                  });
+                }}
+              >
+                Start the story
+              </button>
+            </Tooltip>
+          ) : (
+            <p className={styles.menuQuiet}>In session</p>
+          )}
+          <div className={styles.menuRow}>
+            <span id="late-seats-label" className={styles.menuRowLabel}>
+              Late seats
+            </span>
+            <Tooltip content="Lets players sit down after the story's started" side="bottom">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={info.table.lateSeats}
+                aria-labelledby="late-seats-label"
+                aria-disabled={pending}
+                className={styles.switch}
+                onClick={() => {
+                  if (pending || !info.table) return;
+                  const allowed = !info.table.lateSeats;
+                  run(async () => {
+                    const next = await setLateSeatsAction(campaignId, allowed);
+                    if (next) onInfo(next);
+                  });
+                }}
+              />
+            </Tooltip>
           </div>
           <button
             type="button"

@@ -43,3 +43,8 @@
   color: var(--fg-muted);
 }
 
+/* Accent touches: the hue answers hover and focus on quiet controls (docs/design.md). */
+.joinButton:hover {
+  border-color: var(--accent-touch);
+  color: var(--accent-touch);
+}

@@ -35,6 +35,70 @@
   margin-top: 8px;
 }
 
+.castCount {
+  margin-left: auto;
+  padding-right: 8px;
+  font-size: 12px;
+  color: var(--fg-subtle);
+  font-feature-settings: "tnum" 1;
+}
+
+/* A long cast scrolls inside the outline instead of pushing chapters down. */
+.castScroll {
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.castMiss {
+  margin: 4px 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+/* An input field: flat, square, bordered. */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  color: var(--fg-subtle);
+  transition: border-color 150ms ease;
+}
+
+.search:focus-within {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  color: var(--fg);
+  outline: none;
+}
+
+.search input::placeholder {
+  color: var(--fg-subtle);
+}
+
+.castHead + .search,
+.search + * {
+  margin-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search {
+    transition: none;
+  }
+}
+
 .castRow {
   padding-left: 20px;
 }
@@ -97,6 +161,74 @@
 
 .libraryName[data-empty] {
   color: var(--fg-subtle);
+}
+
+.npcToggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.npcToggle:hover,
+.npcToggle[aria-checked="true"] {
+  color: var(--fg);
+}
+
+.npcSwitch {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.npcSwitch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: var(--fg-muted);
+  transition: translate 0.15s;
+}
+
+.npcToggle[aria-checked="true"] .npcSwitch {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.npcToggle[aria-checked="true"] .npcSwitch::after {
+  translate: 14px 0;
+  background: var(--bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .npcSwitch,
+  .npcSwitch::after {
+    transition: none;
+  }
+}
+
+/* Players' characters, then NPCs: a quiet label between the groups. */
+.castGroup {
+  margin: 10px 0 2px;
+  padding-left: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  list-style: none;
 }
 
 .head {
@@ -293,6 +425,43 @@
   gap: 4px 16px;
 }
 
+.iconPicker {
+  display: grid;
+  grid-template-columns: repeat(5, 40px);
+  gap: 6px;
+}
+
+.iconChoice {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fg-subtle);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.iconChoice:hover {
+  color: var(--fg);
+}
+
+.iconChoice[aria-checked="true"] {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.iconLetter {
+  font-family: var(--font-title);
+  font-weight: var(--title-weight);
+  font-size: 20px;
+  line-height: 1;
+}
+
 .fields {
   display: grid;
   gap: 20px;
@@ -321,6 +490,11 @@
 /* Custom fields are input fields: square and bordered. */
 
 .customFields {
+  display: grid;
+  gap: 8px;
+}
+
+.voicedBy {
   display: grid;
   gap: 8px;
 }
@@ -420,6 +594,7 @@
   .artwork,
   .deleteButton,
   .portraitColumn,
+  .iconChoice,
   .nameInput,
   .nameEdit,
   .nameAction,
@@ -482,4 +657,18 @@
 
 .deleteNote {
   display: block;
+}
+
+/* Accent touches: the hue answers hover and focus on quiet controls (docs/design.md). */
+.campaignCard:hover {
+  border-color: var(--accent-touch);
+}
+
+:is(.fieldLabel, .fieldValue):focus {
+  border-color: var(--accent-touch);
+}
+
+.iconChoice[aria-checked="true"] {
+  border-color: var(--accent-touch);
+  color: var(--accent-touch);
 }

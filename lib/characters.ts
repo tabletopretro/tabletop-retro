@@ -8,6 +8,7 @@ import {
   CHARACTER_ID_PATTERN,
   CHARACTER_LIMITS,
   characterNameError,
+  isCharacterIcon,
   normalizeCharacterName,
   parseCharacterFields,
   type Character,
@@ -31,6 +32,8 @@ function toCharacter(row: Row, campaigns: Character["campaigns"]): Character {
     portrait: row.portrait,
     artwork: row.artwork,
     fields: parseCharacterFields(row.fields) ?? [],
+    icon: isCharacterIcon(row.icon) ? row.icon : null,
+    npc: row.npc,
     campaigns,
   };
 }
@@ -115,6 +118,8 @@ export function updateCharacter(character: OwnedCharacter, patch: CharacterPatch
   if (typeof patch.notes === "string" && patch.notes.length <= CHARACTER_LIMITS.notesLength) {
     set.notes = patch.notes;
   }
+  if (patch.icon === null || isCharacterIcon(patch.icon)) set.icon = patch.icon;
+  if (typeof patch.npc === "boolean") set.npc = patch.npc;
   if (patch.fields !== undefined) {
     const fields = parseCharacterFields(patch.fields);
     if (fields) set.fields = fields;
@@ -152,6 +157,21 @@ export function setCharacterImage(
     }
   }
   return name;
+}
+
+/**
+ * A cast member's portrait for a table's players: null unless the id and
+ * name are well-formed and the character still has that portrait. No owner
+ * check, since the caller has already proved a seat at a table casting them.
+ */
+export function castPortraitPath(characterId: string, name: string) {
+  if (!CHARACTER_ID_PATTERN.test(characterId) || !IMAGE_NAME_PATTERN.test(name)) return null;
+  const row = db
+    .select({ portrait: schema.characters.portrait })
+    .from(schema.characters)
+    .where(eq(schema.characters.id, characterId))
+    .get();
+  return row?.portrait === name ? path.join(folderFor(characterId), name) : null;
 }
 
 /** Null for any name that isn't one of this character's current images. */

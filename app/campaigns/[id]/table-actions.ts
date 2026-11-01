@@ -17,9 +17,11 @@ import {
   openTable,
   setCurrentSlide,
   removeSeat,
+  setLateSeats,
   setPlayback,
   setSeatCharacter,
   snapshotOf,
+  startTable,
   type SeatInfo,
 } from "@/lib/tables";
 
@@ -35,7 +37,7 @@ async function owned(campaignId: unknown) {
 export type TableInfo = {
   code: string;
   /** `slide` is where the players are: the last slide the TL presented. */
-  table: { id: string; state: "open"; slide: string | null } | null;
+  table: { id: string; state: "open" | "in_session"; lateSeats: boolean; slide: string | null } | null;
   seats: SeatInfo[];
 };
 
@@ -43,7 +45,10 @@ function info(campaignId: string): TableInfo {
   const table = liveTable(campaignId);
   return {
     code: campaignCode(campaignId),
-    table: table && table.state !== "closed" ? { id: table.id, state: table.state, slide: table.currentSlide } : null,
+    table:
+      table && table.state !== "closed"
+        ? { id: table.id, state: table.state, lateSeats: table.lateSeats, slide: table.currentSlide }
+        : null,
     seats: table ? listSeats(table.id) : [],
   };
 }
@@ -68,6 +73,23 @@ export async function openTableAction(campaignId: string, slide: unknown): Promi
   const cast = castMembers(doc.cast, listCharacters(ok.user.id));
   const start = typeof slide === "string" && SLIDE_PATTERN.test(slide) ? slide : null;
   openTable(ok.campaign.id, ok.user.id, snapshotOf(doc, cast), start);
+  return info(ok.campaign.id);
+}
+
+/** Puts the table in session: from here new players need late seats on. */
+export async function startStoryAction(campaignId: string): Promise<TableInfo | null> {
+  const ok = await owned(campaignId);
+  if (!ok) return null;
+  const table = liveTable(ok.campaign.id);
+  if (table) startTable(table.id);
+  return info(ok.campaign.id);
+}
+
+export async function setLateSeatsAction(campaignId: string, allowed: unknown): Promise<TableInfo | null> {
+  const ok = await owned(campaignId);
+  if (!ok || typeof allowed !== "boolean") return null;
+  const table = liveTable(ok.campaign.id);
+  if (table) setLateSeats(table.id, allowed);
   return info(ok.campaign.id);
 }
 

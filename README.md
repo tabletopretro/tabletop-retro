@@ -22,9 +22,11 @@ npm run db:seed   # four local users and an example campaign
 npm run dev       # http://localhost:1313
 ```
 
-Sign in as **Ada** (dev builds only; there are no passwords), open the
-**Example retro** campaign, press **Present**, then **Open table
-for players**. Open `http://localhost:1313` in another browser and join
+On the home page press **Open the example retro and change it**: it
+signs you in as **Ada** (dev builds only; there are no passwords) and
+drops you into the editor on the example campaign, whose first page's
+speaker notes walk you round. Press **Present**, then **Open table for
+players**. Open `http://localhost:1313` in another browser and join
 with the code shown in the header.
 
 Local sign-in exists only under `npm run dev`. A production build has no
@@ -120,8 +122,9 @@ A few things the editor doesn't spell out:
   retires it (not while the table is open); anyone who saved the old
   code loses it.
 - **Anyone with the code can join at any point** while the table is
-  open. Locking the table once the story starts, with late players let
-  in by you, is planned.
+  open. **Start the story** (Table menu in Present) puts it in session:
+  everyone seated carries on, newcomers are refused until you turn on
+  **Late seats** in the same menu.
 - **Guests are a browser cookie.** A player who isn't signed in sits by
   name, kept in a cookie. A new browser or cleared cookies means a new
   seat; the old one stays in "At the table" until you remove it.

@@ -4,7 +4,9 @@ import Link from "next/link";
 import {
   Activity,
   addTransitionType,
+  Fragment,
   startTransition,
+  type CSSProperties,
   type DragEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   useEffect,
@@ -27,6 +29,7 @@ import {
   DOC_LIMITS,
   moveChapter,
   movePage,
+  newDocId,
   pageHasContent,
   type CampaignChapter,
   type CampaignDoc,
@@ -37,6 +40,7 @@ import {
   CHARACTER_LIMITS,
   characterNameError,
   characterSelection,
+  displayHumanName,
   normalizeCharacterName,
   characterSelectionId,
   UNTITLED_CHARACTER,
@@ -63,11 +67,15 @@ import {
 } from "../../icons";
 import { Tooltip } from "../../tooltip";
 import ui from "../../ui.module.css";
-import { deleteCampaignAction, saveCampaignDocAction } from "./actions";
+import { copyPastedMediaAction, deleteCampaignAction, saveCampaignDocAction } from "./actions";
+import { pagesMedia, readPages, writePages, type CopiedPages } from "./page-clipboard";
+import { writeFolds, type OutlineFolds } from "./outline-folds";
+import { clampOutlineWidth, OUTLINE_WIDTH, writeOutlineWidth } from "./outline-width";
 import { CharacterEditor } from "../../characters/character-editor";
 import { DeleteCharacterBody } from "../../characters/delete-character-body";
 import charStyles from "../../characters/character.module.css";
 import { CharacterPortrait } from "../../characters/character-portrait";
+import { byRole, CharacterSearch, matchesName, SEARCH_FROM } from "../../characters/character-search";
 import { ConfirmDialog } from "./confirm-dialog";
 import styles from "./editor.module.css";
 import { EDIT_PAGE_MOTION } from "./motion";
@@ -172,6 +180,8 @@ export function CampaignEditor({
   initialTableInfo,
   initialMode = "edit",
   initialAt = null,
+  initialFolds = { cast: false, chapters: [] },
+  initialOutlineWidth = OUTLINE_WIDTH.initial,
 }: {
   campaignId: string;
   initialTitle: string;
@@ -182,6 +192,9 @@ export function CampaignEditor({
   initialMode?: "edit" | "present";
   /** The selection from the URL; ignored unless it names something in this campaign. */
   initialAt?: string | null;
+  /** What the TL left folded in this campaign's outline, from this browser's cookie. */
+  initialFolds?: OutlineFolds;
+  initialOutlineWidth?: number;
 }) {
   const [title, setTitle] = useState(initialTitle);
   const [doc, setDoc] = useState(initialDoc);
@@ -229,8 +242,8 @@ export function CampaignEditor({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [movedId, setMovedId] = useState<string | null>(null);
   const movedTimer = useRef<number | undefined>(undefined);
-  /** Folded chapters. View state only: not saved with the campaign. */
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
+  /** Folded chapters. View state only: not saved with the campaign, but remembered by this browser (`outline-folds.ts`). */
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set(initialFolds.chapters));
   const [renamingId, setRenamingId] = useState<string | null>(null);
   /** Enter and blur can both end a rename; only the first one counts. */
   const renameDone = useRef(false);
@@ -251,11 +264,37 @@ export function CampaignEditor({
   const [leftAt, setLeftAt] = useState<{ table: string; slide: string } | null>(null);
   const [remoteActivity, setRemoteActivity] = useState<LiveActivity | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [castCollapsed, setCastCollapsed] = useState(false);
+  /** The Cast section folded shut. View state only, like folded chapters. */
+  const [castCollapsed, setCastCollapsed] = useState(initialFolds.cast);
+  const [outlineWidth, setOutlineWidth] = useState(initialOutlineWidth);
+  const [resizing, setResizing] = useState<{ x: number; width: number } | null>(null);
+  function resizeOutline(width: number) {
+    const next = clampOutlineWidth(width);
+    setOutlineWidth(next);
+    writeOutlineWidth(next);
+  }
+
+  const [castQuery, setCastQuery] = useState("");
 
   const entries = flatten(doc);
   const cast = castMembers(doc.cast, characters);
   const uncast = characters.filter((c) => !doc.cast.includes(c.id));
+  // Whoever plays a character here can also voice an NPC.
+  const voiceOptions = [
+    ...new Set(
+      cast
+        .filter((c) => !c.npc)
+        .flatMap((c) => c.fields)
+        .filter((field) => field.label.trim().toLocaleLowerCase() === "played by")
+        .map((field) => displayHumanName(field.value))
+        .filter(Boolean),
+    ),
+  ];
+  const castSearchable = cast.length + (libraryOpen ? uncast.length : 0) >= SEARCH_FROM;
+  const query = castSearchable ? castQuery : "";
+  const shownCast = byRole(cast.filter((c) => matchesName(c.name, query)));
+  const castGrouped = shownCast.some((c) => c.npc) && shownCast.some((c) => !c.npc);
+  const shownUncast = uncast.filter((c) => matchesName(c.name, query));
   const openerFor = openerChapterId(selectedId);
   const openerChapter = openerFor ? (doc.chapters.find((c) => c.id === openerFor) ?? null) : null;
   const characterFor = characterSelectionId(selectedId);
@@ -802,6 +841,81 @@ export function CampaignEditor({
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  // Only chapters that still exist, so deleted ones don't pile up in the cookie.
+  const foldedIds = doc.chapters.filter((c) => collapsed.has(c.id)).map((c) => c.id).join(".");
+  useEffect(() => {
+    writeFolds(campaignId, { cast: castCollapsed, chapters: foldedIds ? foldedIds.split(".") : [] });
+  }, [campaignId, castCollapsed, foldedIds]);
+
+  /** After the selected page, at the top of a selected opener's chapter, else at the end. */
+  async function pastePages(copied: CopiedPages) {
+    // Pages from another campaign bring their files along; the paste still lands if that fails, with broken media.
+    if (copied.campaignId !== campaignId) {
+      const media = pagesMedia(copied.pages);
+      if (media.length > 0) {
+        const result = await copyPastedMediaAction(campaignId, copied.campaignId, media).catch(() => null);
+        if (!result?.ok) console.error(result?.error ?? "Couldn't bring the copied pages' media over");
+      }
+    }
+    const base = docRef.current;
+    const afterId = current?.page.id ?? null;
+    const chapter =
+      base.chapters.find((c) => (afterId ? c.pages.some((p) => p.id === afterId) : c.id === openerChapter?.id)) ??
+      base.chapters.at(-1);
+    if (!chapter) return;
+    const room = DOC_LIMITS.pagesPerChapter - chapter.pages.length;
+    const pages = copied.pages.slice(0, Math.max(room, 0)).map((p) => ({ ...p, id: newDocId() }));
+    if (pages.length === 0) return;
+    const at = afterId ? chapter.pages.findIndex((p) => p.id === afterId) + 1 : openerChapter ? 0 : chapter.pages.length;
+    // A speaker from the TL's library who isn't in this cast joins it, so the line keeps its name.
+    const library = new Set(characters.map((c) => c.id));
+    const joining = [...new Set(pages.map((p) => p.speakerId))].filter(
+      (id): id is string => id !== null && library.has(id) && !base.cast.includes(id),
+    );
+    const next = {
+      ...base,
+      cast: [...base.cast, ...joining],
+      chapters: base.chapters.map((c) =>
+        c.id === chapter.id ? { ...c, pages: [...c.pages.slice(0, at), ...pages, ...c.pages.slice(at)] } : c,
+      ),
+    };
+    revealPage(next, pages[0].id);
+    commit(next, { types: ["outline-add", direction(next, afterId ?? undefined, pages[0].id)], select: pages[0].id });
+    flashMoved(pages[0].id);
+  }
+
+  /**
+   * ⌘C / ⌘X copy the selected page, ⌘V pastes after it (into this or any
+   * other campaign). Text fields and selected text keep the browser's own
+   * copy and paste. Pasting is a commit like any edit, so ⌘Z takes it back.
+   */
+  const onClipboard = useEffectEvent((event: ClipboardEvent) => {
+    if (mode !== "edit" || confirmOpen || closing.current || !event.clipboardData) return;
+    if (isTextField(event.target) || isTextField(document.activeElement)) return;
+    if (event.type === "paste") {
+      const copied = readPages(event.clipboardData);
+      if (!copied) return;
+      event.preventDefault();
+      void pastePages(copied);
+      return;
+    }
+    if (window.getSelection()?.isCollapsed === false || !current) return;
+    event.preventDefault();
+    const page = current.page;
+    const words = [page.heading, page.text, page.line ? `“${page.line}”` : ""].filter((part) => part.trim() !== "");
+    const text = words.length > 0 ? words.join("\n\n") : pageLabel(page, cast).text;
+    writePages(event.clipboardData, { campaignId, pages: [page] }, text);
+    if (event.type === "cut") removePage(page.id);
+    else flashMoved(page.id);
+  });
+  useEffect(() => {
+    const handler = (event: ClipboardEvent) => onClipboard(event);
+    for (const type of ["copy", "cut", "paste"] as const) document.addEventListener(type, handler);
+    return () => {
+      for (const type of ["copy", "cut", "paste"] as const) document.removeEventListener(type, handler);
+    };
+  }, []);
+
   function selectOpener(chapterId: string) {
     startTransition(() => {
       addTransitionType("page-next");
@@ -1049,7 +1163,44 @@ export function CampaignEditor({
       </header>
 
       <Activity mode={mode === "edit" ? "visible" : "hidden"}>
-      <div className={styles.body}>
+      <div className={styles.body} style={{ "--outline-width": `${outlineWidth}px` } as CSSProperties}>
+        <div
+          className={styles.outlineResize}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Outline width"
+          aria-valuemin={OUTLINE_WIDTH.min}
+          aria-valuemax={OUTLINE_WIDTH.max}
+          aria-valuenow={outlineWidth}
+          tabIndex={0}
+          data-active={resizing ? "" : undefined}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setResizing({ x: event.clientX, width: outlineWidth });
+          }}
+          onPointerMove={(event) => {
+            if (resizing) setOutlineWidth(clampOutlineWidth(resizing.width + event.clientX - resizing.x));
+          }}
+          onPointerUp={(event) => {
+            if (!resizing) return;
+            setResizing(null);
+            event.currentTarget.releasePointerCapture(event.pointerId);
+            resizeOutline(outlineWidth);
+          }}
+          onPointerCancel={() => setResizing(null)}
+          onDoubleClick={() => resizeOutline(OUTLINE_WIDTH.initial)}
+          onKeyDown={(event) => {
+            const step = event.shiftKey ? 64 : 16;
+            if (event.key === "ArrowLeft") resizeOutline(outlineWidth - step);
+            else if (event.key === "ArrowRight") resizeOutline(outlineWidth + step);
+            else if (event.key === "Home") resizeOutline(OUTLINE_WIDTH.min);
+            else if (event.key === "End") resizeOutline(OUTLINE_WIDTH.max);
+            else return;
+            event.preventDefault();
+          }}
+        />
         <nav
           className={styles.outline}
           aria-label="Outline"
@@ -1077,16 +1228,37 @@ export function CampaignEditor({
                 <ChevronIcon size={14} />
               </button>
               <p className={styles.eyebrow}>Cast</p>
+              {cast.length > 0 ? <span className={charStyles.castCount}>{cast.length}</span> : null}
             </div>
             {castCollapsed ? null : (
             <div id="cast-list">
-            {cast.length > 0 ? (
-              <ul className={styles.pages}>
-                {cast.map((character) => {
+            {castSearchable ? (
+              <CharacterSearch
+                value={castQuery}
+                onChange={setCastQuery}
+                placeholder={libraryOpen ? "Search characters" : "Search cast"}
+                onPickFirst={() => {
+                  const first = shownCast[0] ?? null;
+                  if (first) selectCharacter(first.id);
+                  else if (libraryOpen && shownUncast[0]) addToCast(shownUncast[0].id);
+                }}
+              />
+            ) : null}
+            {query && shownCast.length === 0 && !(libraryOpen && shownUncast.length > 0) ? (
+              <p className={charStyles.castMiss}>No one called “{query.trim()}”</p>
+            ) : null}
+            {shownCast.length > 0 ? (
+              <ul className={`${styles.pages} ${charStyles.castScroll}`}>
+                {shownCast.map((character, i) => {
                   const active = character.id === selectedCharacter?.id;
                   const name = character.name.trim();
+                  const groupStart = castGrouped && (i === 0 || shownCast[i - 1].npc !== character.npc);
                   return (
-                    <ViewTransition key={character.id} {...ROW_MOTION} default="none">
+                    <Fragment key={character.id}>
+                    {groupStart ? (
+                      <li className={charStyles.castGroup}>{character.npc ? "NPCs" : "Players"}</li>
+                    ) : null}
+                    <ViewTransition {...ROW_MOTION} default="none">
                       <li
                         className={`${styles.pageRow} ${charStyles.castRow}`}
                         data-active={active ? "" : undefined}
@@ -1115,6 +1287,7 @@ export function CampaignEditor({
                         </Tooltip>
                       </li>
                     </ViewTransition>
+                    </Fragment>
                   );
                 })}
               </ul>
@@ -1170,9 +1343,9 @@ export function CampaignEditor({
                 </button>
               ) : null}
             </div>
-            {libraryOpen && uncast.length > 0 ? (
-              <ul className={charStyles.library} id="cast-library" aria-label="Your characters">
-                {uncast.map((character) => {
+            {libraryOpen && shownUncast.length > 0 ? (
+              <ul className={`${charStyles.library} ${charStyles.castScroll}`} id="cast-library" aria-label="Your characters">
+                {shownUncast.map((character) => {
                   const name = character.name.trim();
                   return (
                     <li key={character.id}>
@@ -1418,6 +1591,7 @@ export function CampaignEditor({
                 <CharacterEditor
                   character={selectedCharacter}
                   campaignId={campaignId}
+                  voiceOptions={voiceOptions}
                   onRename={(name) => renameCharacter(selectedCharacter.id, name)}
                   onChange={(patch) => patchCharacter(selectedCharacter.id, patch)}
                   // Only the images come back from the server; taking the

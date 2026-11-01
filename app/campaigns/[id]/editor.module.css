@@ -397,6 +397,87 @@ button.back {
   background: color-mix(in srgb, var(--accent) 85%, var(--fg));
 }
 
+/* The tooltip's anchor is inline-flex; the option inside must still fill the menu's width like its siblings. */
+.menuOptionWrap {
+  display: flex;
+}
+
+.menuOptionWrap > .presentOption {
+  flex: 1;
+}
+
+.menuQuiet {
+  margin: 0;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+.menuRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+}
+
+.menuRowLabel {
+  font-size: 14px;
+  color: var(--fg);
+}
+
+/* A small toggle: the track is the button, the knob its ::after. Rounded, like the soft buttons around it. */
+.switch {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--fg) 18%, transparent);
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--fg);
+  transition: transform 150ms ease;
+}
+
+.switch[aria-checked="true"] {
+  background: var(--accent);
+}
+
+.switch[aria-checked="true"]::after {
+  background: var(--accent-fg);
+  transform: translateX(14px);
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.switch[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch::after {
+    transition: none;
+  }
+}
+
 .settingsDanger {
   display: inline-flex;
   align-items: center;
@@ -419,9 +500,55 @@ button.back {
 }
 
 .body {
+  position: relative;
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: var(--outline-width, 280px) minmax(0, 1fr);
   min-height: 0;
+}
+
+/* The outline's right edge is a handle: drag (or arrow keys) to resize. */
+.outlineResize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--outline-width, 280px) - 4px);
+  z-index: 2;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.outlineResize::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: var(--accent-touch);
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.outlineResize:hover::after,
+.outlineResize:focus-visible::after,
+.outlineResize[data-active]::after {
+  opacity: 1;
+}
+
+.outlineResize:focus-visible {
+  outline: none;
+}
+
+.body:has(.outlineResize[data-active]) {
+  cursor: col-resize;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outlineResize::after {
+    transition: none;
+  }
 }
 
 .outline {
@@ -1457,6 +1584,21 @@ button.back {
   gap: 6px;
 }
 
+/* Players' characters, then NPCs: a quiet label between the groups. */
+.speakerGroup {
+  margin: 8px 0 2px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.speakerGroup:first-child {
+  margin-top: 0;
+}
+
 .speaker {
   display: flex;
   align-items: center;
@@ -1871,4 +2013,47 @@ button.back {
   font-size: 17px;
   line-height: 1.65;
   color: var(--fg-muted);
+}
+
+/* Accent touches: the hue answers hover and focus on quiet controls (docs/design.md). */
+.pageText:focus {
+  border-color: var(--accent-touch);
+}
+
+.pageRow[data-active] {
+  background-image: linear-gradient(var(--accent-touch), var(--accent-touch));
+  background-size: 3px 100%;
+  background-repeat: no-repeat;
+}
+
+:is(.addRow, .foldAll):hover {
+  color: var(--accent-touch);
+}
+
+:is(.addElement:not(:disabled), .toolButton):hover {
+  color: var(--accent-touch);
+}
+
+.speechLine:focus {
+  border-color: var(--accent-touch);
+}
+
+.segment[aria-checked="true"] {
+  border-color: var(--accent-touch);
+}
+
+.catalogItem:hover {
+  border-color: var(--accent-touch);
+}
+
+.catalogItem:hover .catalogName {
+  color: var(--accent-touch);
+}
+
+:is(.kindOption, .kindChoice):hover {
+  color: var(--accent-touch);
+}
+
+.kindChoice:hover {
+  border-color: var(--accent-touch);
 }

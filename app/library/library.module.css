@@ -275,3 +275,16 @@
   }
 }
 
+/* Accent touches: the hue answers hover and focus on quiet controls (docs/design.md). */
+.card:hover {
+  border-color: var(--accent-touch);
+}
+
+.tab[aria-current="page"] {
+  border-bottom-color: var(--accent-touch);
+}
+
+.newCard:hover .newCover {
+  color: var(--accent-touch);
+  border-color: var(--accent-touch);
+}

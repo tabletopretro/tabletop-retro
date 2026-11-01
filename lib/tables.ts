@@ -6,7 +6,7 @@ import { db, schema } from "@/db";
 import type { ActivityConfig } from "@/activities/types";
 import { activityTimer } from "@/activities";
 import { docImages, docSounds, docVideos, type CampaignDoc } from "./campaign-doc";
-import type { Character } from "./character-doc";
+import { VOICED_BY_FIELD, type Character } from "./character-doc";
 import { generateTableCode, TABLE_CODE_PATTERN } from "./table-code";
 import { publishTable } from "./table-events";
 
@@ -39,9 +39,42 @@ export function snapshotOf(doc: CampaignDoc, cast: readonly Character[]): TableS
         pages: c.pages.map((p) => ({ ...p, title: "", notes: "" })),
       })),
     },
-    // Players get names; notes, portraits, artwork and fields stay owner-only.
-    cast: cast.map((c) => ({ ...c, notes: "", portrait: null, artwork: null, fields: [], campaigns: [] })),
+    cast: cast.map(snapshotCastMember),
   };
+}
+
+/** The only custom fields a player's character card shows; anything else the TL wrote stays private. */
+const PLAYER_CAST_FIELDS = new Set(["race", "played by", VOICED_BY_FIELD.toLocaleLowerCase()]);
+
+/** Names, icons and portraits (served to seated players through the play media route); notes and artwork stay with the TL. */
+const snapshotCastMember = (c: Character): Character => ({
+  ...c,
+  notes: "",
+  artwork: null,
+  fields: c.fields.filter((field) => PLAYER_CAST_FIELDS.has(field.label.trim().toLocaleLowerCase())),
+  campaigns: [],
+});
+
+/**
+ * A character edit reaches every live table that casts them. Portraits are
+ * served by their current file name, so a snapshot holding the old one
+ * would show players a broken image until the next campaign save.
+ */
+export function refreshCastMember(character: Character) {
+  const live = db
+    .select({ id: schema.tables.id, snapshot: schema.tables.snapshot })
+    .from(schema.tables)
+    .where(ne(schema.tables.state, "closed"))
+    .all();
+  for (const table of live) {
+    const snapshot = table.snapshot as TableSnapshot | null;
+    if (!snapshot?.cast?.some((c) => c.id === character.id)) continue;
+    refreshSnapshot(table.id, {
+      ...snapshot,
+      savedAt: Date.now(),
+      cast: snapshot.cast.map((c) => (c.id === character.id ? snapshotCastMember(character) : c)),
+    });
+  }
 }
 
 /** The campaign's code, claiming one on first use. Collisions just roll again. */
@@ -91,12 +124,19 @@ export function liveTable(campaignId: string) {
 export function openTable(campaignId: string, tlUserId: string, snapshot: TableSnapshot, slide: string | null) {
   const existing = liveTable(campaignId);
   if (existing) return existing;
+  // The team is copied at open so the table's listing doesn't change if the campaign moves.
+  const campaign = db
+    .select({ teamId: schema.campaigns.teamId })
+    .from(schema.campaigns)
+    .where(eq(schema.campaigns.id, campaignId))
+    .get();
   return db
     .insert(schema.tables)
     .values({
       code: campaignCode(campaignId),
       campaignId,
       tlUserId,
+      teamId: campaign?.teamId ?? null,
       state: "open",
       snapshot,
       currentSlide: slide,
@@ -142,6 +182,23 @@ export function activityOnSlide(snapshot: unknown, slide: string | null): Activi
 
 export function refreshSnapshot(tableId: string, snapshot: TableSnapshot) {
   db.update(schema.tables).set({ snapshot }).where(eq(schema.tables.id, tableId)).run();
+  publishTable(tableId);
+}
+
+/** Once started, new seats need `lateSeats`; everyone already seated carries on. Starting twice is a no-op. */
+export function startTable(tableId: string) {
+  db.update(schema.tables)
+    .set({ state: "in_session", startedAt: new Date() })
+    .where(and(eq(schema.tables.id, tableId), eq(schema.tables.state, "open")))
+    .run();
+  publishTable(tableId);
+}
+
+export function setLateSeats(tableId: string, allowed: boolean) {
+  db.update(schema.tables)
+    .set({ lateSeats: allowed })
+    .where(and(eq(schema.tables.id, tableId), ne(schema.tables.state, "closed")))
+    .run();
   publishTable(tableId);
 }
 
@@ -198,6 +255,7 @@ export function liveTableByCode(code: string) {
         id: schema.tables.id,
         code: schema.tables.code,
         state: schema.tables.state,
+        lateSeats: schema.tables.lateSeats,
         campaignId: schema.tables.campaignId,
         currentSlide: schema.tables.currentSlide,
         playback: schema.tables.playback,

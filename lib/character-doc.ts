@@ -16,19 +16,64 @@ export const CHARACTER_LIMITS = {
 /** Server-generated UUIDs, the only ids a cast or reference may hold. */
 export const CHARACTER_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
+/** Built-in portrait icons, used when a character has no image. Stored by id. */
+export const CHARACTER_ICONS = [
+  { id: "feather", label: "Feather" },
+  { id: "candle", label: "Candle" },
+  { id: "campfire", label: "Campfire" },
+  { id: "die", label: "Die" },
+  { id: "crown", label: "Crown" },
+  { id: "shield", label: "Shield" },
+  { id: "compass", label: "Compass" },
+  { id: "key", label: "Key" },
+  { id: "star", label: "Star" },
+] as const;
+
+export type CharacterIconId = (typeof CHARACTER_ICONS)[number]["id"];
+
+export function isCharacterIcon(value: unknown): value is CharacterIconId {
+  return CHARACTER_ICONS.some((icon) => icon.id === value);
+}
+
 export type Character = {
   id: string;
   name: string;
   /** TL only; never sent to players. */
   notes: string;
-  /** A generated image file name, or null; without one the portrait is the name's first letter. */
+  /** A generated image file name, or null. Wins over `icon`; without either the portrait is the name's first letter. */
   portrait: string | null;
+  /** Where a player's screen loads the portrait from (the table's media); unset, the owner's route. Never stored. */
+  portraitSrc?: string;
   artwork: string | null;
   fields: CharacterField[];
+  icon: CharacterIconId | null;
+  /** Played by the TL, not a player. Lists put NPCs after the player characters. */
+  npc: boolean;
   campaigns: { id: string; title: string }[];
 };
 
 export type CharacterField = { label: string; value: string };
+
+/** An NPC's voice is a custom field so it travels with the character and shows on the card. */
+export const VOICED_BY_FIELD = "Voiced by";
+const VOICED_BY_FIELD_KEY = VOICED_BY_FIELD.toLocaleLowerCase();
+
+/** Any name containing "lead" reads as the Table Lead, so the field never shows a stray "DM"-style label. */
+export function displayHumanName(value: string): string {
+  const clean = value.replace(/\s+/g, " ").trim();
+  return /\blead\b/i.test(clean) ? "Table Lead" : clean;
+}
+
+export function characterVoicedBy(character: Pick<Character, "fields" | "npc">): string {
+  if (!character.npc) return "";
+  return displayHumanName(character.fields.find((field) => field.label.trim().toLocaleLowerCase() === VOICED_BY_FIELD_KEY)?.value ?? "");
+}
+
+export function setCharacterVoicedBy(fields: readonly CharacterField[], value: string): CharacterField[] {
+  const clean = value.replace(/\s+/g, " ").trim().slice(0, CHARACTER_LIMITS.fieldValueLength);
+  const without = fields.filter((field) => field.label.trim().toLocaleLowerCase() !== VOICED_BY_FIELD_KEY);
+  return clean ? [{ label: VOICED_BY_FIELD, value: clean }, ...without].slice(0, CHARACTER_LIMITS.fields) : without;
+}
 
 /** Null if anything is off; the input may be hostile. */
 export function parseCharacterFields(raw: unknown): CharacterField[] | null {
@@ -47,7 +92,7 @@ export function parseCharacterFields(raw: unknown): CharacterField[] | null {
 
 export type CharacterImageField = "portrait" | "artwork";
 
-export type CharacterPatch = Partial<Pick<Character, "name" | "notes" | "fields">>;
+export type CharacterPatch = Partial<Pick<Character, "name" | "notes" | "icon" | "fields" | "npc">>;
 
 /** What a reference to a character outside the cast, or deleted, reads as. */
 export const UNNAMED_CHARACTER = "Unnamed character";
